@@ -56,6 +56,7 @@ class StoryListItem {
   final int authorId;
   final int? primaryGenreId;
   final String status;
+  final String? coverImage;
   final DateTime updatedAt;
 
   StoryListItem({
@@ -64,17 +65,24 @@ class StoryListItem {
     required this.authorId,
     this.primaryGenreId,
     required this.status,
+    this.coverImage,
     required this.updatedAt,
   });
 
   factory StoryListItem.fromJson(Map<String, dynamic> json) {
     return StoryListItem(
-      storyId: json['storyId'] as int,
-      title: json['title'] as String,
-      authorId: json['authorId'] as int,
-      primaryGenreId: json['primaryGenreId'] as int?,
-      status: json['status'] as String,
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      storyId: json['storyId'] as int? ?? json['StoryId'] as int,
+      title: json['title'] as String? ?? json['Title'] as String,
+      authorId: json['authorId'] as int? ?? json['AuthorId'] as int,
+      primaryGenreId: json['primaryGenreId'] as int? ?? json['PrimaryGenreId'] as int?,
+      status: json['status'] as String? ?? json['Status'] as String,
+      coverImage: () {
+        final value = json['coverImage'] as String? ?? json['CoverImage'] as String?;
+        return value != null && value.isNotEmpty ? value : null;
+      }(),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] as String? ?? json['UpdatedAt'] as String,
+      ),
     );
   }
 }
@@ -136,4 +144,3 @@ class StoryUpdateDTO {
     };
   }
 }
-

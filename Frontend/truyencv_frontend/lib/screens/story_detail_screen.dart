@@ -36,6 +36,8 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
     if (response.status && response.data != null) {
       final story = response.data!;
+      // Debug: kiểm tra coverImage
+      debugPrint('Story detail coverImage: ${story.coverImage}');
       setState(() {
         _story = story;
         _isLoading = false;
@@ -102,7 +104,27 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                                 height: 200,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.image_not_supported, size: 100);
+                                  debugPrint('Image load error: $error');
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.image_not_supported, size: 100),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Không thể tải ảnh',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                      ),
+                                    ],
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return const SizedBox(
+                                    height: 200,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
                                 },
                               ),
                             ),

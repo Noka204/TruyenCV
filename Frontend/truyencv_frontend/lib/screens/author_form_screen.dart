@@ -42,9 +42,9 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
       _applicationUserIdController.text = author.applicationUserId ?? '';
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(response.message)));
         Navigator.pop(context);
       }
     }
@@ -63,11 +63,18 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
       // Create
       final dto = AuthorCreateDTO(
         displayName: _displayNameController.text.trim(),
-        bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
-        avatarUrl: _avatarUrlController.text.trim().isEmpty ? null : _avatarUrlController.text.trim(),
-        applicationUserId: _applicationUserIdController.text.trim().isEmpty
-            ? null
-            : _applicationUserIdController.text.trim(),
+        bio:
+            _bioController.text.trim().isEmpty
+                ? null
+                : _bioController.text.trim(),
+        avatarUrl:
+            _avatarUrlController.text.trim().isEmpty
+                ? null
+                : _avatarUrlController.text.trim(),
+        applicationUserId:
+            _applicationUserIdController.text.trim().isEmpty
+                ? null
+                : _applicationUserIdController.text.trim(),
       );
 
       final response = await _authorService.createAuthor(dto);
@@ -78,22 +85,29 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tạo tác giả thành công')),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.message)));
         }
       }
     } else {
       // Update
       final dto = AuthorUpdateDTO(
         displayName: _displayNameController.text.trim(),
-        bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
-        avatarUrl: _avatarUrlController.text.trim().isEmpty ? null : _avatarUrlController.text.trim(),
-        applicationUserId: _applicationUserIdController.text.trim().isEmpty
-            ? null
-            : _applicationUserIdController.text.trim(),
+        bio:
+            _bioController.text.trim().isEmpty
+                ? null
+                : _bioController.text.trim(),
+        avatarUrl:
+            _avatarUrlController.text.trim().isEmpty
+                ? null
+                : _avatarUrlController.text.trim(),
+        applicationUserId:
+            _applicationUserIdController.text.trim().isEmpty
+                ? null
+                : _applicationUserIdController.text.trim(),
       );
 
       final response = await _authorService.updateAuthor(widget.authorId!, dto);
@@ -104,11 +118,11 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cập nhật tác giả thành công')),
           );
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(response.message)));
         }
       }
     }
@@ -131,93 +145,105 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: _isLoadingData
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _displayNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tên hiển thị *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+      body:
+          _isLoadingData
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _displayNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tên hiển thị *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Vui lòng nhập tên hiển thị';
+                          }
+                          if (value.length > 150) {
+                            return 'Tên hiển thị không được quá 150 ký tự';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập tên hiển thị';
-                        }
-                        if (value.length > 150) {
-                          return 'Tên hiển thị không được quá 150 ký tự';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _bioController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tiểu sử',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.description),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _bioController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tiểu sử',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.description),
+                        ),
+                        maxLines: 4,
                       ),
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _avatarUrlController,
-                      decoration: const InputDecoration(
-                        labelText: 'URL Avatar',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.image),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _avatarUrlController,
+                        decoration: const InputDecoration(
+                          labelText: 'URL Avatar',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.image),
+                        ),
+                        validator: (value) {
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              value.length > 500) {
+                            return 'URL không được quá 500 ký tự';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value != null && value.isNotEmpty && value.length > 500) {
-                          return 'URL không được quá 500 ký tự';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _applicationUserIdController,
-                      decoration: const InputDecoration(
-                        labelText: 'Application User ID',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.account_circle),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _applicationUserIdController,
+                        decoration: const InputDecoration(
+                          labelText: 'Application User ID',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.account_circle),
+                        ),
+                        validator: (value) {
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              value.length > 450) {
+                            return 'ID không được quá 450 ký tự';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value != null && value.isNotEmpty && value.length > 450) {
-                          return 'ID không được quá 450 ký tự';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _saveAuthor,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _saveAuthor,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                : Text(
+                                  widget.authorId == null
+                                      ? 'Tạo mới'
+                                      : 'Cập nhật',
+                                ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : Text(widget.authorId == null ? 'Tạo mới' : 'Cập nhật'),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 }
-

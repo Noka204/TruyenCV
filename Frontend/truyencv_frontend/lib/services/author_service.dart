@@ -3,12 +3,14 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/author.dart';
 import '../models/api_response.dart';
+import 'http_client_helper.dart';
 
 class AuthorService {
+  final http.Client _client = HttpClientHelper.createHttpClient();
   // Lấy tất cả tác giả
   Future<ApiResponse<List<AuthorListItem>>> getAllAuthors() async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('${ApiConfig.authorsEndpoint}/all'),
         headers: {'Content-Type': 'application/json'},
       );
@@ -34,7 +36,7 @@ class AuthorService {
   // Lấy tác giả theo ID
   Future<ApiResponse<Author?>> getAuthorById(int id) async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('${ApiConfig.authorsEndpoint}/$id'),
         headers: {'Content-Type': 'application/json'},
       );
@@ -60,7 +62,7 @@ class AuthorService {
   // Tạo tác giả mới
   Future<ApiResponse<int?>> createAuthor(AuthorCreateDTO dto) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('${ApiConfig.authorsEndpoint}/create'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(dto.toJson()),
@@ -87,7 +89,7 @@ class AuthorService {
   // Cập nhật tác giả
   Future<ApiResponse<bool>> updateAuthor(int id, AuthorUpdateDTO dto) async {
     try {
-      final response = await http.put(
+      final response = await _client.put(
         Uri.parse('${ApiConfig.authorsEndpoint}/update-$id'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(dto.toJson()),
@@ -109,7 +111,7 @@ class AuthorService {
   // Xóa tác giả
   Future<ApiResponse<bool>> deleteAuthor(int id) async {
     try {
-      final response = await http.delete(
+      final response = await _client.delete(
         Uri.parse('${ApiConfig.authorsEndpoint}/delete-$id'),
         headers: {'Content-Type': 'application/json'},
       );
@@ -130,7 +132,7 @@ class AuthorService {
   // Lấy danh sách truyện của tác giả
   Future<ApiResponse<List<dynamic>?>> getAuthorStories(int id) async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('${ApiConfig.authorsEndpoint}/stories/$id'),
         headers: {'Content-Type': 'application/json'},
       );

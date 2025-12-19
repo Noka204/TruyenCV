@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/story_service.dart';
 import 'story_detail_screen.dart';
+import 'admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,6 +75,17 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         elevation: 2,
         actions: [
+          // Nút Admin
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminScreen()),
+              );
+            },
+            tooltip: 'Quản lý',
+          ),
           // Nút thông báo
           Stack(
             children: [
@@ -234,6 +246,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStoryCard(StoryListItem story) {
+    // Debug: kiểm tra coverImage
+    if (story.coverImage != null && story.coverImage!.isNotEmpty) {
+      debugPrint('Story ${story.storyId} coverImage: ${story.coverImage}');
+    } else {
+      debugPrint('Story ${story.storyId} coverImage is null or empty');
+    }
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -253,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cover image placeholder
+              // Cover image
               Container(
                 width: 80,
                 height: 120,
@@ -261,7 +280,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.book, size: 40, color: Colors.grey),
+                child: story.coverImage != null && story.coverImage!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          story.coverImage!,
+                          width: 80,
+                          height: 120,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.book, size: 40, color: Colors.grey);
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          },
+                        ),
+                      )
+                    : const Icon(Icons.book, size: 40, color: Colors.grey),
               ),
               const SizedBox(width: 12),
               // Story info

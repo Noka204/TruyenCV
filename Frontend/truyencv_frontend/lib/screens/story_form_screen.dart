@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../models/author.dart';
+import '../models/genre.dart';
 import '../services/story_service.dart';
 import '../services/author_service.dart';
+import '../services/genre_service.dart';
 
 class StoryFormScreen extends StatefulWidget {
   final int? storyId;
@@ -20,8 +22,10 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
   final _coverImageController = TextEditingController();
   final _storyService = StoryService();
   final _authorService = AuthorService();
+  final _genreService = GenreService();
 
   List<AuthorListItem> _authors = [];
+  List<GenreListItem> _genres = [];
   int? _selectedAuthorId;
   int? _selectedGenreId;
   String _selectedStatus = 'Đang tiến hành';
@@ -30,14 +34,14 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
 
   final List<String> _statusOptions = [
     'Đang tiến hành',
-    'Hoàn thành',
-    'Tạm dừng',
+    'Đã hoàn thành',
   ];
 
   @override
   void initState() {
     super.initState();
     _loadAuthors();
+    _loadGenres();
     if (widget.storyId != null) {
       _loadStoryData();
     }
@@ -48,6 +52,15 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
     if (response.status && response.data != null) {
       setState(() {
         _authors = response.data!;
+      });
+    }
+  }
+
+  Future<void> _loadGenres() async {
+    final response = await _genreService.getAllGenres();
+    if (response.status && response.data != null) {
+      setState(() {
+        _genres = response.data!;
       });
     }
   }
@@ -256,16 +269,29 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      TextFormField(
+                      DropdownButtonFormField<int>(
+                        value: _selectedGenreId,
                         decoration: const InputDecoration(
-                          labelText: 'Thể loại chính (ID)',
+                          labelText: 'Thể loại chính',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.category),
                         ),
-                        keyboardType: TextInputType.number,
+                        items: [
+                          const DropdownMenuItem<int>(
+                            value: null,
+                            child: Text('Không chọn'),
+                          ),
+                          ..._genres.map((genre) {
+                            return DropdownMenuItem<int>(
+                              value: genre.genreId,
+                              child: Text(genre.name),
+                            );
+                          }),
+                        ],
                         onChanged: (value) {
-                          _selectedGenreId =
-                              value.isEmpty ? null : int.tryParse(value);
+                          setState(() {
+                            _selectedGenreId = value;
+                          });
                         },
                       ),
                       const SizedBox(height: 16),

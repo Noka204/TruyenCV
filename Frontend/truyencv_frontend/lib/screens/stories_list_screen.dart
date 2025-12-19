@@ -287,7 +287,7 @@ class _StoriesListScreenState extends State<StoriesListScreen> {
                                     'Trạng thái: ${story.status}',
                                     style: TextStyle(
                                       color:
-                                          story.status == 'Hoàn thành'
+                                          story.status == 'Đã hoàn thành'
                                               ? Colors.green
                                               : Colors.orange,
                                     ),

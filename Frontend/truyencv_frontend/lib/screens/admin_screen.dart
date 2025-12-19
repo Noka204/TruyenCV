@@ -582,12 +582,10 @@ class _AdminScreenState extends State<AdminScreen>
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Hoàn thành':
+      case 'Đã hoàn thành':
         return Colors.green;
       case 'Đang tiến hành':
         return Colors.blue;
-      case 'Tạm dừng':
-        return Colors.orange;
       default:
         return Colors.grey;
     }

@@ -5,7 +5,9 @@ import 'story_detail_screen.dart';
 import 'admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? initialQuery;
+
+  const HomeScreen({super.key, this.initialQuery});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,7 +24,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadStories();
+    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+      _searchController.text = widget.initialQuery!;
+      _searchQuery = widget.initialQuery!;
+    }
+    _loadStories(query: widget.initialQuery);
   }
 
   Future<void> _loadStories({String? query}) async {
@@ -252,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       debugPrint('Story ${story.storyId} coverImage is null or empty');
     }
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -280,26 +286,33 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: story.coverImage != null && story.coverImage!.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          story.coverImage!,
-                          width: 80,
-                          height: 120,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.book, size: 40, color: Colors.grey);
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            );
-                          },
-                        ),
-                      )
-                    : const Icon(Icons.book, size: 40, color: Colors.grey),
+                child:
+                    story.coverImage != null && story.coverImage!.isNotEmpty
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            story.coverImage!,
+                            width: 80,
+                            height: 120,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.book,
+                                size: 40,
+                                color: Colors.grey,
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                        : const Icon(Icons.book, size: 40, color: Colors.grey),
               ),
               const SizedBox(width: 12),
               // Story info
@@ -362,12 +375,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Hoàn thành':
+      case 'Đã hoàn thành':
         return Colors.green;
       case 'Đang tiến hành':
         return Colors.blue;
-      case 'Tạm dừng':
-        return Colors.orange;
       default:
         return Colors.grey;
     }

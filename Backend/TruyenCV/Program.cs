@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
 using TruyenCV.Data;
 using TruyenCV.Data.Repositories.Implementation;
 using TruyenCV.Data.Repositories.Interface;
+using TruyenCV.Models;
 using TruyenCV.Services.Implementation;
 using TruyenCV.Services.IService;
 
@@ -20,10 +24,34 @@ builder.Services.AddControllers()
 builder.Services.AddDbContext<TruyenCVDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Identity (nếu có dùng login/role)
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+// Identity (sử dụng ApplicationUser thay vì IdentityUser)
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<TruyenCVDbContext>()
     .AddDefaultTokenProviders();
+
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey ?? "")),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 // CORS (nếu Flutter Web / frontend gọi API)
 builder.Services.AddCors(options =>
@@ -45,6 +73,8 @@ builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 var app = builder.Build();
 
@@ -56,5 +86,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed roles
+await RoleSeeder.SeedRolesAsync(app.Services);
 
 app.Run();

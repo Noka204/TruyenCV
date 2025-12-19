@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TruyenCV.Data;
 
@@ -11,9 +12,11 @@ using TruyenCV.Data;
 namespace TruyenCV.Migrations
 {
     [DbContext(typeof(TruyenCVDbContext))]
-    partial class TruyenCVDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219010017_change_story")]
+    partial class change_story
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

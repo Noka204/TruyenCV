@@ -28,14 +28,47 @@ namespace TruyenCV.Data
             modelBuilder.Entity<StoryGenre>()
                 .HasKey(sg => new { sg.StoryId, sg.GenreId });
 
-            modelBuilder.Entity<FollowStory>()
-                .HasKey(fs => new { fs.ApplicationUserId, fs.StoryId });
+            modelBuilder.Entity<Story>()
+                .HasOne(s => s.PrimaryGenre)
+                .WithMany(g => g.PrimaryGenreStories)
+                .HasForeignKey(s => s.PrimaryGenreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Bookmark>()
                 .HasKey(b => new { b.ApplicationUserId, b.StoryId });
-            modelBuilder.Entity<FollowAuthor>()
-                .HasKey(fa => new { fa.ApplicationUserId, fa.AuthorId });
 
+            // FollowStory: PK ghép
+            modelBuilder.Entity<FollowStory>(e =>
+            {
+                e.HasKey(x => new { x.ApplicationUserId, x.StoryId });
 
+                e.HasOne(x => x.ApplicationUser)
+                 .WithMany() // hoặc .WithMany(u => u.FollowStories) nếu có
+                 .HasForeignKey(x => x.ApplicationUserId);
+
+                e.HasOne(x => x.Story)
+                 .WithMany(s => s.FollowStories) // vì Story.cs có collection này
+                 .HasForeignKey(x => x.StoryId);
+
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            });
+
+            // FollowAuthor: PK ghép (KHỚP DB)
+            modelBuilder.Entity<FollowAuthor>(e =>
+            {
+                e.HasKey(x => new { x.ApplicationUserId, x.AuthorId });
+
+                e.HasOne(x => x.Follower)
+                 .WithMany()
+                 .HasForeignKey(x => x.ApplicationUserId);
+
+                e.HasOne(x => x.Author)
+                 .WithMany()
+                 .HasForeignKey(x => x.AuthorId);
+
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            });
         }
+
     }
 }

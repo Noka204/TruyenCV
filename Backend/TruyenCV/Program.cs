@@ -2,8 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using TruyenCV.Data;
-using TruyenCV.Repositories;
-using TruyenCV.Services;
+using TruyenCV.Data.Repositories.Implementation;
+using TruyenCV.Data.Repositories.Interface;
+using TruyenCV.Services.Implementation;
+using TruyenCV.Services.IService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,9 +36,15 @@ builder.Services.AddCors(options =>
 
 // DI
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IStoryRepository, StoryRepository>();
-builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
+builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<IChapterService, ChapterService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
 
 var app = builder.Build();
 

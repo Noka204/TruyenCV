@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TruyenCV.Data;
+using TruyenCV.Data.Repositories.Interface;
 using TruyenCV.Models;
 
-namespace TruyenCV.Repositories;
+namespace TruyenCV.Data.Repositories.Implementation;
 
 public class AuthorRepository : IAuthorRepository
 {

@@ -7,5 +7,6 @@ public class StoryListItemDTO
     public int AuthorId { get; set; }
     public int? PrimaryGenreId { get; set; }
     public string Status { get; set; } = null!;
+    public string CoverImage { get; set; } = null!;
     public DateTime UpdatedAt { get; set; }
 }

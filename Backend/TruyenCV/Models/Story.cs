@@ -8,7 +8,9 @@ public class Story
 {
     [Key]
     [Column("story_id")]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int StoryId { get; set; }
+
 
     [Required, StringLength(200)]
     [Column("title")]
@@ -27,6 +29,9 @@ public class Story
     [StringLength(500)]
     [Column("cover_image")]
     public string? CoverImage { get; set; }
+    [StringLength(500)]
+    [Column("Banner_image")]
+    public string? BannerImage { get; set; }
 
     [Column("primary_genre_id")]
     public int? PrimaryGenreId { get; set; }

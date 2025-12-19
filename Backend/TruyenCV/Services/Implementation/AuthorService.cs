@@ -1,9 +1,9 @@
-﻿using TruyenCV.Dtos.Authors;
+﻿using TruyenCV.Data.Repositories.Interface;
+using TruyenCV.Dtos.Authors;
 using TruyenCV.Dtos.Stories;
 using TruyenCV.Models;
-using TruyenCV.Repositories;
 
-namespace TruyenCV.Services;
+namespace TruyenCV.Services.Implementation;
 
 public class AuthorService : IAuthorService
 {

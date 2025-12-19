@@ -15,6 +15,7 @@ public class FollowStory
 
     [Column("story_id")]
     public int StoryId { get; set; }
+    [ForeignKey(nameof(StoryId))]
     public Story Story { get; set; } = null!;
 
     [Column("created_at")]

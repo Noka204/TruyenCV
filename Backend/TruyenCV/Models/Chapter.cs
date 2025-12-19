@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TruyenCV.Models;
@@ -24,6 +25,8 @@ public class Chapter
     [Required]
     [Column("content")]
     public string Content { get; set; } = null!;
+    [Column("read_cont")]
+    public int ReadCont { get; set; } = 0;
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

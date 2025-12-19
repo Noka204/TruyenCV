@@ -1,23 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TruyenCV.Dtos.Stories;
+﻿namespace TruyenCV.Dtos.Stories;
 
 public class StoryCreateDTO
 {
-    [Required, StringLength(200)]
-    public string Title { get; set; } = null!;
-
-    [Required]
+    public string? Title { get; set; }
     public int AuthorId { get; set; }
-
     public string? Description { get; set; }
 
-    [StringLength(500)]
     public string? CoverImage { get; set; }
+    public string? BannerImage { get; set; }     // ✅ banner
 
     public int? PrimaryGenreId { get; set; }
+    public string? Status { get; set; }          // "Đang tiến hành" | "Đã hoàn thành"
 
-    // 2 trạng thái tiếng Việt
-    [Required, StringLength(20)]
-    public string Status { get; set; } = "Đang tiến hành";
+    public List<int>? GenreIds { get; set; }     // ✅ list thể loại cho StoryGenres
 }

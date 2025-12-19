@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using TruyenCV.Dtos.Stories;
-using TruyenCV.Services;
+using TruyenCV.Services.IService;
 
 namespace TruyenCV.Controllers;
 
@@ -12,15 +13,53 @@ public class StoriesController : ControllerBase
     private readonly IStoryService _service;
     public StoriesController(IStoryService service) => _service = service;
 
-    // GET: api/stories/all?authorId=1&primaryGenreId=2&q=abc
     [HttpGet("all")]
-    public async Task<IActionResult> GetAll([FromQuery] int? authorId = null, [FromQuery] int? primaryGenreId = null, [FromQuery] string? q = null)
+    public async Task<IActionResult> GetAll([FromQuery] string? q = null)
     {
-        var data = await _service.GetAllAsync(authorId, primaryGenreId, q);
+        var data = await _service.GetAllAsync(q);
         return Ok(new { status = true, message = "Lấy danh sách truyện thành công.", data });
     }
 
-    // GET: api/stories/5
+    [HttpGet("by-author/{authorId:int}")]
+    public async Task<IActionResult> GetByAuthor(int authorId)
+    {
+        try
+        {
+            var data = await _service.GetByAuthorAsync(authorId);
+            return Ok(new { status = true, message = "Lấy danh sách truyện theo tác giả thành công.", data });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { status = false, message = "Không tìm thấy tác giả.", data = (object?)null });
+        }
+    }
+
+    [HttpGet("by-genre/{genreId:int}")]
+    public async Task<IActionResult> GetByGenre(int genreId, [FromQuery] List<int>? genreIds = null)
+    {
+        try
+        {
+            // Nếu có genreIds query parameter, lọc theo nhiều thể loại
+            if (genreIds is not null && genreIds.Count > 0)
+            {
+                var data = await _service.GetByGenresAsync(genreIds);
+                return Ok(new { status = true, message = "Lấy danh sách truyện theo các thể loại thành công.", data });
+            }
+
+            // Ngược lại, lọc theo genreId từ route
+            var singleData = await _service.GetByGenreAsync(genreId);
+            return Ok(new { status = true, message = "Lấy danh sách truyện theo thể loại thành công.", data = singleData });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { status = false, message = "Không tìm thấy thể loại.", data = (object?)null });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -30,18 +69,11 @@ public class StoriesController : ControllerBase
             : Ok(new { status = true, message = "Lấy thông tin truyện thành công.", data = dto });
     }
 
-    // POST: api/stories/create
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] StoryCreateDTO dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new
-            {
-                status = false,
-                message = "Dữ liệu không hợp lệ.",
-                data = (object?)null,
-                errors = ToErrorDict(ModelState)
-            });
+            return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
@@ -58,18 +90,11 @@ public class StoriesController : ControllerBase
         }
     }
 
-    // PUT: api/stories/update-5
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] StoryUpdateDTO dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new
-            {
-                status = false,
-                message = "Dữ liệu không hợp lệ.",
-                data = (object?)null,
-                errors = ToErrorDict(ModelState)
-            });
+            return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
@@ -90,7 +115,7 @@ public class StoriesController : ControllerBase
         }
     }
 
-    // DELETE: api/stories/delete-5
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete-{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -105,8 +130,6 @@ public class StoriesController : ControllerBase
             .Where(x => x.Value?.Errors.Count > 0)
             .ToDictionary(
                 k => k.Key,
-                v => v.Value!.Errors
-                    .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "Dữ liệu không hợp lệ." : e.ErrorMessage)
-                    .ToArray()
+                v => v.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "Dữ liệu không hợp lệ." : e.ErrorMessage).ToArray()
             );
 }

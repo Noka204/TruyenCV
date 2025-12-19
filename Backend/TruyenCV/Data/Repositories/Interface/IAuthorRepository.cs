@@ -1,6 +1,6 @@
 ﻿using TruyenCV.Models;
 
-namespace TruyenCV.Repositories;
+namespace TruyenCV.Data.Repositories.Interface;
 
 public interface IAuthorRepository
 {

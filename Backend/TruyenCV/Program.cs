@@ -68,11 +68,17 @@ builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IStoryRepository, StoryRepository>();
 builder.Services.AddScoped<IChapterRepository, ChapterRepository>();
 builder.Services.AddScoped<IRatingRepository, RatingRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<IReadingHistoryRepository, ReadingHistoryRepository>();
+builder.Services.AddScoped<IBookmarkRepository, BookmarkRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IReadingHistoryService, ReadingHistoryService>();
+builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 

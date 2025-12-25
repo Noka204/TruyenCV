@@ -49,9 +49,48 @@ public class StoryRepository : IStoryRepository
 
     public Task<Story?> GetByIdAsync(int id)
         => _db.Stories.AsNoTracking()
-            .Include(s => s.StoryGenres) // ✅ để lấy GenreIds
-            .Include(s => s.Chapters)    // ✅ để lấy Chapters
+            .Include(s => s.StoryGenres)
+            .Include(s => s.Chapters)
             .FirstOrDefaultAsync(s => s.StoryId == id);
+
+    // ✅ Lazy loading methods - chỉ lấy dữ liệu cần thiết từ database
+    public async Task<List<Story>> GetLatestAsync(int page = 1, int pageSize = 10)
+    {
+        var skip = (page - 1) * pageSize;
+        return await _db.Stories.AsNoTracking()
+            .OrderByDescending(s => s.UpdatedAt)
+            .Skip(skip)
+            .Take(pageSize)
+            .Include(s => s.StoryGenres)
+            .Include(s => s.Chapters)
+            .ToListAsync();
+    }
+
+    public async Task<List<Story>> GetCompletedAsync(int page = 1, int pageSize = 10)
+    {
+        var skip = (page - 1) * pageSize;
+        return await _db.Stories.AsNoTracking()
+            .Where(s => s.Status == "Đã hoàn thành")
+            .OrderByDescending(s => s.UpdatedAt)
+            .Skip(skip)
+            .Take(pageSize)
+            .Include(s => s.StoryGenres)
+            .Include(s => s.Chapters)
+            .ToListAsync();
+    }
+
+    public async Task<List<Story>> GetOngoingAsync(int page = 1, int pageSize = 10)
+    {
+        var skip = (page - 1) * pageSize;
+        return await _db.Stories.AsNoTracking()
+            .Where(s => s.Status == "Đang tiến hành")
+            .OrderByDescending(s => s.UpdatedAt)
+            .Skip(skip)
+            .Take(pageSize)
+            .Include(s => s.StoryGenres)
+            .Include(s => s.Chapters)
+            .ToListAsync();
+    }
 
     public Task<bool> AuthorExistsAsync(int authorId)
         => _db.Authors.AnyAsync(a => a.AuthorId == authorId);

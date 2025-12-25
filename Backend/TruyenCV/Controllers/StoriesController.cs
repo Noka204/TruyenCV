@@ -20,6 +20,66 @@ public class StoriesController : ControllerBase
         return Ok(new { status = true, message = "Lấy danh sách truyện thành công.", data });
     }
 
+    [HttpGet("latest")]
+    public async Task<IActionResult> GetLatest([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            if (page < 1)
+                return BadRequest(new { status = false, message = "Trang phải từ 1 trở lên.", data = (object?)null });
+            
+            if (pageSize < 1 || pageSize > 100)
+                return BadRequest(new { status = false, message = "Kích thước trang phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetLatestAsync(page, pageSize);
+            return Ok(new { status = true, message = "Lấy danh sách truyện mới nhất thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [HttpGet("completed")]
+    public async Task<IActionResult> GetCompleted([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            if (page < 1)
+                return BadRequest(new { status = false, message = "Trang phải từ 1 trở lên.", data = (object?)null });
+            
+            if (pageSize < 1 || pageSize > 100)
+                return BadRequest(new { status = false, message = "Kích thước trang phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetCompletedAsync(page, pageSize);
+            return Ok(new { status = true, message = "Lấy danh sách truyện đã hoàn thành thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [HttpGet("ongoing")]
+    public async Task<IActionResult> GetOngoing([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            if (page < 1)
+                return BadRequest(new { status = false, message = "Trang phải từ 1 trở lên.", data = (object?)null });
+            
+            if (pageSize < 1 || pageSize > 100)
+                return BadRequest(new { status = false, message = "Kích thước trang phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetOngoingAsync(page, pageSize);
+            return Ok(new { status = true, message = "Lấy danh sách truyện đang tiến hành thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
     [HttpGet("by-author/{authorId:int}")]
     public async Task<IActionResult> GetByAuthor(int authorId)
     {
@@ -70,7 +130,8 @@ public class StoriesController : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> Create([FromBody] StoryCreateDTO dto)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Create([FromForm] StoryCreateDTO dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });
@@ -91,7 +152,8 @@ public class StoriesController : ControllerBase
     }
 
     [HttpPut("update-{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] StoryUpdateDTO dto)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Update(int id, [FromForm] StoryUpdateDTO dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });

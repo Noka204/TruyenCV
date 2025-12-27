@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
-import '../models/chapter.dart';
+import '../models/rating.dart';
 import '../models/api_response.dart';
 import 'http_client_helper.dart';
 
-class ChapterService {
+class RatingService {
   final http.Client _client = HttpClientHelper.createHttpClient();
   String? _token;
 
@@ -21,51 +21,20 @@ class ChapterService {
     return headers;
   }
 
-  // Lấy danh sách chapters theo story ID
-  Future<ApiResponse<List<ChapterListItem>>> getChaptersByStory(
-    int storyId,
-  ) async {
+  // Lấy danh sách rating theo story
+  Future<ApiResponse<List<Rating>?>> getRatingsByStory(int storyId) async {
     try {
       final response = await _client.get(
-        Uri.parse('${ApiConfig.chaptersEndpoint}/by-story/$storyId'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${ApiConfig.ratingsEndpoint}/by-story/$storyId'),
+        headers: _getHeaders(),
       );
 
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
         if (data is List) {
           return data
-              .map(
-                (item) =>
-                    ChapterListItem.fromJson(item as Map<String, dynamic>),
-              )
+              .map((item) => Rating.fromJson(item as Map<String, dynamic>))
               .toList();
-        }
-        return <ChapterListItem>[];
-      });
-
-      return apiResponse;
-    } catch (e) {
-      return ApiResponse(
-        status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
-        data: null,
-      );
-    }
-  }
-
-  // Lấy chapter theo ID
-  Future<ApiResponse<Chapter?>> getChapterById(int id) async {
-    try {
-      final response = await _client.get(
-        Uri.parse('${ApiConfig.chaptersEndpoint}/$id'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
-        if (data != null) {
-          return Chapter.fromJson(data as Map<String, dynamic>);
         }
         return null;
       });
@@ -80,19 +49,45 @@ class ChapterService {
     }
   }
 
-  // Tạo chapter mới
-  Future<ApiResponse<int?>> createChapter(ChapterCreateDTO dto) async {
+  // Lấy tổng hợp rating
+  Future<ApiResponse<RatingSummary?>> getRatingSummary(int storyId) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('${ApiConfig.ratingsEndpoint}/summary/$storyId'),
+        headers: _getHeaders(),
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is Map) {
+          return RatingSummary.fromJson(data as Map<String, dynamic>);
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // Tạo rating mới
+  Future<ApiResponse<int?>> createRating(RatingCreateDTO dto) async {
     try {
       final response = await _client.post(
-        Uri.parse('${ApiConfig.chaptersEndpoint}/create'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${ApiConfig.ratingsEndpoint}/create'),
+        headers: _getHeaders(),
         body: json.encode(dto.toJson()),
       );
 
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
         if (data != null && data is Map) {
-          return data['chapterId'] as int?;
+          return data['ratingId'] as int?;
         }
         return null;
       });
@@ -107,12 +102,12 @@ class ChapterService {
     }
   }
 
-  // Cập nhật chapter
-  Future<ApiResponse<bool>> updateChapter(int id, ChapterUpdateDTO dto) async {
+  // Cập nhật rating
+  Future<ApiResponse<bool>> updateRating(int id, RatingUpdateDTO dto) async {
     try {
       final response = await _client.put(
-        Uri.parse('${ApiConfig.chaptersEndpoint}/update-$id'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('${ApiConfig.ratingsEndpoint}/update-$id'),
+        headers: _getHeaders(),
         body: json.encode(dto.toJson()),
       );
 
@@ -129,11 +124,11 @@ class ChapterService {
     }
   }
 
-  // Xóa chapter
-  Future<ApiResponse<bool>> deleteChapter(int id) async {
+  // Xóa rating
+  Future<ApiResponse<bool>> deleteRating(int id) async {
     try {
       final response = await _client.delete(
-        Uri.parse('${ApiConfig.chaptersEndpoint}/delete-$id'),
+        Uri.parse('${ApiConfig.ratingsEndpoint}/delete-$id'),
         headers: _getHeaders(),
       );
 

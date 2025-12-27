@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/story_service.dart';
+import '../services/auth_service.dart';
 import 'story_detail_screen.dart';
 import 'admin_screen.dart';
+import 'login_screen.dart';
+import 'main_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? initialQuery;
@@ -15,11 +18,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final StoryService _storyService = StoryService();
+  final AuthService _authService = AuthService();
   final TextEditingController _searchController = TextEditingController();
   List<StoryListItem> _stories = [];
   bool _isLoading = true;
   String? _errorMessage;
   String _searchQuery = '';
+
+  bool get _isLoggedIn {
+    final token = _authService.token;
+    return token != null && token.isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -63,6 +72,56 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadStories(query: value.isEmpty ? null : value);
   }
 
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Xác nhận'),
+            content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Đăng xuất'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm == true) {
+      final response = await _authService.logout();
+      if (mounted) {
+        // Token đã được xóa trong AuthService.logout()
+        // Navigate về MainScreen mới với UniqueKey để force rebuild tất cả screens
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreen(key: UniqueKey())),
+          (route) => false,
+        );
+
+        if (response.status) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đăng xuất thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -81,6 +140,27 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         elevation: 2,
         actions: [
+          // Nút Logout/Đăng nhập
+          if (_isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: _logout,
+              tooltip: 'Đăng xuất',
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.login),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                ).then((_) {
+                  // Refresh để hiển thị lại nút logout nếu đã đăng nhập
+                  setState(() {});
+                });
+              },
+              tooltip: 'Đăng nhập',
+            ),
           // Nút Admin
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
@@ -91,41 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             tooltip: 'Quản lý',
-          ),
-          // Nút thông báo
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  // TODO: Navigate to notifications
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Tính năng thông báo đang phát triển'),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text(
-                    '15',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -252,13 +297,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStoryCard(StoryListItem story) {
-    // Debug: kiểm tra coverImage
-    if (story.coverImage != null && story.coverImage!.isNotEmpty) {
-      debugPrint('Story ${story.storyId} coverImage: ${story.coverImage}');
-    } else {
-      debugPrint('Story ${story.storyId} coverImage is null or empty');
-    }
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,

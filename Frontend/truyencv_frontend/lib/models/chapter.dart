@@ -23,7 +23,8 @@ class Chapter {
     return Chapter(
       chapterId: json['chapterId'] as int? ?? json['ChapterId'] as int,
       storyId: json['storyId'] as int? ?? json['StoryId'] as int,
-      chapterNumber: json['chapterNumber'] as int? ?? json['ChapterNumber'] as int,
+      chapterNumber:
+          json['chapterNumber'] as int? ?? json['ChapterNumber'] as int,
       title: json['title'] as String? ?? json['Title'] as String?,
       content: json['content'] as String? ?? json['Content'] as String,
       readCont: json['readCont'] as int? ?? json['ReadCont'] as int? ?? 0,
@@ -73,7 +74,8 @@ class ChapterListItem {
     return ChapterListItem(
       chapterId: json['chapterId'] as int? ?? json['ChapterId'] as int,
       storyId: json['storyId'] as int? ?? json['StoryId'] as int,
-      chapterNumber: json['chapterNumber'] as int? ?? json['ChapterNumber'] as int,
+      chapterNumber:
+          json['chapterNumber'] as int? ?? json['ChapterNumber'] as int,
       title: json['title'] as String? ?? json['Title'] as String?,
       readCont: json['readCont'] as int? ?? json['ReadCont'] as int? ?? 0,
       createdAt: DateTime.parse(
@@ -98,3 +100,36 @@ class ChapterListItem {
   }
 }
 
+class ChapterCreateDTO {
+  final int storyId;
+  final int chapterNumber;
+  final String? title;
+  final String content;
+
+  ChapterCreateDTO({
+    required this.storyId,
+    required this.chapterNumber,
+    this.title,
+    required this.content,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'storyId': storyId,
+      'chapterNumber': chapterNumber,
+      if (title != null) 'title': title,
+      'content': content,
+    };
+  }
+}
+
+class ChapterUpdateDTO {
+  final String? title;
+  final String content;
+
+  ChapterUpdateDTO({this.title, required this.content});
+
+  Map<String, dynamic> toJson() {
+    return {if (title != null) 'title': title, 'content': content};
+  }
+}

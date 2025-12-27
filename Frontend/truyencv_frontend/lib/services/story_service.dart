@@ -42,20 +42,13 @@ class StoryService {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
-        
-        // Debug: kiểm tra JSON response
-        if (jsonData['data'] is List && (jsonData['data'] as List).isNotEmpty) {
-          final firstItem = (jsonData['data'] as List)[0] as Map<String, dynamic>;
-          print('DEBUG - First story JSON keys: ${firstItem.keys}');
-          print('DEBUG - First story coverImage: ${firstItem['coverImage'] ?? firstItem['CoverImage']}');
-        }
-        
+
         final apiResponse = ApiResponse.fromJson(jsonData, (data) {
           if (data is List) {
             return data.map((item) {
-              final parsed = StoryListItem.fromJson(item as Map<String, dynamic>);
-              print('DEBUG - Parsed coverImage: ${parsed.coverImage}');
-              return parsed;
+              return StoryListItem.fromJson(
+                item as Map<String, dynamic>,
+              );
             }).toList();
           }
           return <StoryListItem>[];
@@ -183,6 +176,188 @@ class StoryService {
         status: false,
         message: 'Lỗi kết nối: ${e.toString()}',
         data: false,
+      );
+    }
+  }
+
+  // Lấy truyện mới nhất
+  Future<ApiResponse<Map<String, dynamic>?>> getLatestStories({
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.storiesEndpoint}/latest').replace(
+        queryParameters: {
+          'page': page.toString(),
+          'pageSize': pageSize.toString(),
+        },
+      );
+
+      final response = await _client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is Map) {
+          return data as Map<String, dynamic>;
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // Lấy truyện đã hoàn thành
+  Future<ApiResponse<Map<String, dynamic>?>> getCompletedStories({
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.storiesEndpoint}/completed').replace(
+        queryParameters: {
+          'page': page.toString(),
+          'pageSize': pageSize.toString(),
+        },
+      );
+
+      final response = await _client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is Map) {
+          return data as Map<String, dynamic>;
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // Lấy truyện đang tiến hành
+  Future<ApiResponse<Map<String, dynamic>?>> getOngoingStories({
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.storiesEndpoint}/ongoing').replace(
+        queryParameters: {
+          'page': page.toString(),
+          'pageSize': pageSize.toString(),
+        },
+      );
+
+      final response = await _client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is Map) {
+          return data as Map<String, dynamic>;
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // Lấy truyện theo tác giả
+  Future<ApiResponse<List<StoryListItem>?>> getStoriesByAuthor(
+    int authorId,
+  ) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('${ApiConfig.storiesEndpoint}/by-author/$authorId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data is List) {
+          return data
+              .map(
+                (item) => StoryListItem.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // Lấy truyện theo thể loại
+  Future<ApiResponse<List<StoryListItem>?>> getStoriesByGenre(
+    int genreId, {
+    List<int>? genreIds,
+  }) async {
+    try {
+      final uri = Uri.parse(
+        '${ApiConfig.storiesEndpoint}/by-genre/$genreId',
+      ).replace(
+        queryParameters:
+            genreIds != null && genreIds.isNotEmpty
+                ? {'genreIds': genreIds.map((id) => id.toString()).toList()}
+                : null,
+      );
+
+      final response = await _client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data is List) {
+          return data
+              .map(
+                (item) => StoryListItem.fromJson(item as Map<String, dynamic>),
+              )
+              .toList();
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
       );
     }
   }

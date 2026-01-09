@@ -71,6 +71,8 @@ builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IReadingHistoryRepository, ReadingHistoryRepository>();
 builder.Services.AddScoped<IBookmarkRepository, BookmarkRepository>();
+builder.Services.AddScoped<IFollowStoryRepository, FollowStoryRepository>();
+builder.Services.AddScoped<IFollowAuthorRepository, FollowAuthorRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
@@ -79,6 +81,8 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReadingHistoryService, ReadingHistoryService>();
 builder.Services.AddScoped<IBookmarkService, BookmarkService>();
+builder.Services.AddScoped<IFollowStoryService, FollowStoryService>();
+builder.Services.AddScoped<IFollowAuthorService, FollowAuthorService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 

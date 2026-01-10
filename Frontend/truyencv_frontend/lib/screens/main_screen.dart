@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'bookmark_screen.dart';
 import 'reading_history_screen.dart';
+import 'menu_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(key: UniqueKey()),
     BookmarkScreen(key: UniqueKey()),
     ReadingHistoryScreen(key: UniqueKey()),
+    MenuScreen(key: UniqueKey()),
   ];
 
   @override
@@ -37,6 +39,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Đã lưu'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'Menu'),
         ],
       ),
     );

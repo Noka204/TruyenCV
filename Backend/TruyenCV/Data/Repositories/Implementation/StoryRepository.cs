@@ -164,4 +164,47 @@ public class StoryRepository : IStoryRepository
         await _db.StoryGenres.AddRangeAsync(rows);
         await _db.SaveChangesAsync();
     }
+
+    // Top stories by reading history
+    public async Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByWeekAsync(int limit)
+    {
+        var weekAgo = DateTime.UtcNow.AddDays(-7);
+
+        var topStories = await _db.ReadingHistories
+            .Where(rh => rh.UpdatedAt >= weekAgo)
+            .GroupBy(rh => rh.StoryId)
+            .Select(g => new { StoryId = g.Key, ReadCount = g.Count() })
+            .OrderByDescending(x => x.ReadCount)
+            .Take(limit)
+            .ToListAsync();
+
+        return topStories.Select(x => (x.StoryId, x.ReadCount)).ToList();
+    }
+
+    public async Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByMonthAsync(int limit)
+    {
+        var monthAgo = DateTime.UtcNow.AddDays(-30);
+
+        var topStories = await _db.ReadingHistories
+            .Where(rh => rh.UpdatedAt >= monthAgo)
+            .GroupBy(rh => rh.StoryId)
+            .Select(g => new { StoryId = g.Key, ReadCount = g.Count() })
+            .OrderByDescending(x => x.ReadCount)
+            .Take(limit)
+            .ToListAsync();
+
+        return topStories.Select(x => (x.StoryId, x.ReadCount)).ToList();
+    }
+
+    public async Task<List<(int StoryId, int ReadCount)>> GetTopAllTimeAsync(int limit)
+    {
+        var topStories = await _db.ReadingHistories
+            .GroupBy(rh => rh.StoryId)
+            .Select(g => new { StoryId = g.Key, ReadCount = g.Count() })
+            .OrderByDescending(x => x.ReadCount)
+            .Take(limit)
+            .ToListAsync();
+
+        return topStories.Select(x => (x.StoryId, x.ReadCount)).ToList();
+    }
 }

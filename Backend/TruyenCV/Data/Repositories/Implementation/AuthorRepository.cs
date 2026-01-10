@@ -54,4 +54,15 @@ public class AuthorRepository : IAuthorRepository
             .Select(s => new ValueTuple<int, string, string, DateTime>(s.StoryId, s.Title, s.Status, s.UpdatedAt))
             .ToListAsync();
     }
+
+    public Task<Author?> GetByApplicationUserIdAsync(string userId)
+        => _db.Authors.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.ApplicationUserId == userId);
+
+    public Task<List<Author>> GetPendingAuthorsAsync()
+        => _db.Authors.AsNoTracking()
+            .Include(a => a.ApplicationUser)
+            .Where(a => a.Status == "Pending")
+            .OrderBy(a => a.CreatedAt)
+            .ToListAsync();
 }

@@ -18,4 +18,12 @@ public interface IStoryService
     Task<StoryDTO> CreateAsync(StoryCreateDTO dto);
     Task<StoryDTO> UpdateAsync(int id, StoryUpdateDTO dto);
     Task<bool> DeleteAsync(int id);
+
+    // User story creation
+    Task<StoryDTO> CreateAsUserAsync(string userId, StoryCreateDTO dto);
+
+    // Top stories
+    Task<List<StoryTopDTO>> GetTopWeeklyAsync(int limit = 10);
+    Task<List<StoryTopDTO>> GetTopMonthlyAsync(int limit = 10);
+    Task<List<StoryTopDTO>> GetTopAllTimeAsync(int limit = 10);
 }

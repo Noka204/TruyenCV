@@ -13,4 +13,7 @@ public interface IAuthorRepository
     Task<bool> DeleteAsync(int id);
 
     Task<List<(int StoryId, string Title, string Status, DateTime UpdatedAt)>> GetStoriesByAuthorAsync(int authorId);
+
+    Task<Author?> GetByApplicationUserIdAsync(string userId);
+    Task<List<Author>> GetPendingAuthorsAsync();
 }

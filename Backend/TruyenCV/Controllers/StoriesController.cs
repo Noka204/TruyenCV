@@ -128,6 +128,97 @@ public class StoriesController : ControllerBase
             ? NotFound(new { status = false, message = "Không tìm thấy truyện.", data = (object?)null })
             : Ok(new { status = true, message = "Lấy thông tin truyện thành công.", data = dto });
     }
+    
+    // ===== Top Stories =====
+
+    [HttpGet("top-weekly")]
+    public async Task<IActionResult> GetTopWeekly([FromQuery] int limit = 10)
+    {
+        try
+        {
+            if (limit < 1 || limit > 100)
+                return BadRequest(new { status = false, message = "Limit phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetTopWeeklyAsync(limit);
+            return Ok(new { status = true, message = "Lấy top truyện tuần thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [HttpGet("top-monthly")]
+    public async Task<IActionResult> GetTopMonthly([FromQuery] int limit = 10)
+    {
+        try
+        {
+            if (limit < 1 || limit > 100)
+                return BadRequest(new { status = false, message = "Limit phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetTopMonthlyAsync(limit);
+            return Ok(new { status = true, message = "Lấy top truyện tháng thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [HttpGet("top-all-time")]
+    public async Task<IActionResult> GetTopAllTime([FromQuery] int limit = 10)
+    {
+        try
+        {
+            if (limit < 1 || limit > 100)
+                return BadRequest(new { status = false, message = "Limit phải từ 1 đến 100.", data = (object?)null });
+
+            var data = await _service.GetTopAllTimeAsync(limit);
+            return Ok(new { status = true, message = "Lấy top truyện mọi thời đại thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    // ===== User Story Creation =====
+
+    [Authorize]
+    [HttpPost("create-as-user")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> CreateAsUser([FromForm] StoryCreateDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });
+
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { status = false, message = "Không tìm thấy thông tin user.", data = (object?)null });
+
+            var created = await _service.CreateAsUserAsync(userId, dto);
+            return StatusCode(201, new { status = true, message = "Tạo truyện thành công.", data = created });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { status = false, message = ex.Message, data = (object?)null });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { status = false, message = ex.Message, data = (object?)null });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
 
     [HttpPost("create")]
     [Consumes("multipart/form-data")]

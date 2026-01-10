@@ -71,6 +71,83 @@ public class AuthorsController : ControllerBase
             : NotFound(new { status = false, message = "Không tìm thấy tác giả để xóa.", data = (object?)null });
     }
 
+    // ===== Author Approval Workflow =====
+
+    [Authorize]
+    [HttpPost("request")]
+    public async Task<IActionResult> SubmitRequest([FromBody] AuthorRequestDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(new { status = false, message = "Dữ liệu không hợp lệ.", data = (object?)null, errors = ToErrorDict(ModelState) });
+
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { status = false, message = "Không tìm thấy thông tin user.", data = (object?)null });
+
+            var authorId = await _service.SubmitAuthorRequestAsync(userId, dto);
+            return StatusCode(201, new { status = true, message = "Gửi yêu cầu đăng ký làm tác giả thành công.", data = new { authorId } });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [Authorize]
+    [HttpGet("my-status")]
+    public async Task<IActionResult> GetMyStatus()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { status = false, message = "Không tìm thấy thông tin user.", data = (object?)null });
+
+        var status = await _service.GetMyAuthorStatusAsync(userId);
+        return status is null
+            ? NotFound(new { status = false, message = "Bạn chưa gửi yêu cầu đăng ký làm tác giả.", data = (object?)null })
+            : Ok(new { status = true, message = "Lấy trạng thái thành công.", data = status });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPendingAuthors()
+    {
+        var data = await _service.GetPendingAuthorsAsync();
+        return Ok(new { status = true, message = "Lấy danh sách tác giả chờ duyệt thành công.", data });
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id:int}/approve")]
+    public async Task<IActionResult> ApproveAuthor(int id)
+    {
+        try
+        {
+            var adminId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(adminId))
+                return Unauthorized(new { status = false, message = "Không tìm thấy thông tin admin.", data = (object?)null });
+
+            var ok = await _service.ApproveAuthorAsync(id, adminId);
+            return ok
+                ? Ok(new { status = true, message = "Duyệt tác giả thành công.", data = new { authorId = id } })
+                : NotFound(new { status = false, message = "Không tìm thấy tác giả.", data = (object?)null });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id:int}/reject")]
+    public async Task<IActionResult> RejectAuthor(int id)
+    {
+        var ok = await _service.RejectAuthorAsync(id);
+        return ok
+            ? Ok(new { status = true, message = "Đã từ chối và xóa yêu cầu đăng ký.", data = new { authorId = id } })
+            : NotFound(new { status = false, message = "Không tìm thấy tác giả.", data = (object?)null });
+    }
+
 
     private static Dictionary<string, string[]> ToErrorDict(ModelStateDictionary modelState)
         => modelState

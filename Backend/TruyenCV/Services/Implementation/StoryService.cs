@@ -8,10 +8,12 @@ namespace TruyenCV.Services.Implementation;
 public class StoryService : IStoryService
 {
     private readonly IStoryRepository _repo;
+    private readonly IAuthorRepository _authorRepo;
     
-    public StoryService(IStoryRepository repo)
+    public StoryService(IStoryRepository repo, IAuthorRepository authorRepo)
     {
         _repo = repo;
+        _authorRepo = authorRepo;
     }
 
     public async Task<List<StoryListItemDTO>> GetAllAsync(string? q = null)
@@ -23,7 +25,7 @@ public class StoryService : IStoryService
     public async Task<List<StoryListItemDTO>> GetByAuthorAsync(int authorId)
     {
         if (!await _repo.AuthorExistsAsync(authorId))
-            throw new KeyNotFoundException("Không tìm th?y tác gi?.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y tï¿½c gi?.");
 
         var list = await _repo.GetAllAsync(authorId, genreId: null, q: null);
         return list.Select(MapToListItemDTO).ToList();
@@ -32,7 +34,7 @@ public class StoryService : IStoryService
     public async Task<List<StoryListItemDTO>> GetByGenreAsync(int genreId)
     {
         if (!await _repo.GenreExistsAsync(genreId))
-            throw new KeyNotFoundException("Không tìm th?y th? lo?i.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y th? lo?i.");
 
         var list = await _repo.GetAllAsync(authorId: null, genreId, q: null);
         return list.Select(MapToListItemDTO).ToList();
@@ -41,14 +43,14 @@ public class StoryService : IStoryService
     public async Task<List<StoryListItemDTO>> GetByGenresAsync(List<int>? genreIds)
     {
         if (genreIds is null || genreIds.Count == 0)
-            throw new ArgumentException("Danh sách th? lo?i không ???c ?? tr?ng.");
+            throw new ArgumentException("Danh sï¿½ch th? lo?i khï¿½ng ???c ?? tr?ng.");
 
         var distinctIds = genreIds.Where(x => x > 0).Distinct().ToList();
         if (distinctIds.Count == 0)
-            throw new ArgumentException("Danh sách th? lo?i không h?p l?.");
+            throw new ArgumentException("Danh sï¿½ch th? lo?i khï¿½ng h?p l?.");
 
         if (!await _repo.GenresExistAsync(distinctIds))
-            throw new KeyNotFoundException("Có th? lo?i không t?n t?i.");
+            throw new KeyNotFoundException("Cï¿½ th? lo?i khï¿½ng t?n t?i.");
 
         var list = await _repo.GetByGenresAsync(distinctIds);
         return list.Select(MapToListItemDTO).ToList();
@@ -77,6 +79,58 @@ public class StoryService : IStoryService
         var list = await _repo.GetOngoingAsync(page, pageSize);
         return list.Select(MapToListItemDTO).ToList();
     }
+    
+    public async Task<List<StoryTopDTO>> GetTopWeeklyAsync(int limit = 10)
+    {
+        var topStoryIds = await _repo.GetTopStoriesByWeekAsync(limit);
+        return await BuildTopStoriesDTOs(topStoryIds);
+    }
+
+    public async Task<List<StoryTopDTO>> GetTopMonthlyAsync(int limit = 10)
+    {
+        var topStoryIds = await _repo.GetTopStoriesByMonthAsync(limit);
+        return await BuildTopStoriesDTOs(topStoryIds);
+    }
+
+    public async Task<List<StoryTopDTO>> GetTopAllTimeAsync(int limit = 10)
+    {
+        var topStoryIds = await _repo.GetTopAllTimeAsync(limit);
+        return await BuildTopStoriesDTOs(topStoryIds);
+    }
+
+    private async Task<List<StoryTopDTO>> BuildTopStoriesDTOs(List<(int StoryId, int ReadCount)> topStories)
+    {
+        if (topStories.Count == 0)
+            return new List<StoryTopDTO>();
+
+        var storyIds = topStories.Select(x => x.StoryId).ToList();
+        
+        var stories = await _repo.GetAllAsync();
+        var storiesDict = stories
+            .Where(s => storyIds.Contains(s.StoryId))
+            .ToDictionary(s => s.StoryId);
+
+        var result = new List<StoryTopDTO>();
+        
+        foreach (var (storyId, readCount) in topStories)
+        {
+            if (!storiesDict.TryGetValue(storyId, out var story))
+                continue;
+
+            result.Add(new StoryTopDTO
+            {
+                StoryId = story.StoryId,
+                Title = story.Title,
+                CoverImage = story.CoverImage,
+                AuthorName = story.Author?.DisplayName ?? "Unknown",
+                ReadCount = readCount,
+                TotalChapters = story.Chapters?.Count ?? 0,
+                Status = story.Status
+            });
+        }
+
+        return result;
+    }
 
     public async Task<StoryDTO> CreateAsync(StoryCreateDTO dto)
     {
@@ -101,15 +155,29 @@ public class StoryService : IStoryService
         var id = await _repo.CreateAsync(entity, n.GenreIds);
 
         var created = await _repo.GetByIdAsync(id);
-        if (created is null) throw new InvalidOperationException("T?o truy?n th?t b?i. Vui lòng th? l?i.");
+        if (created is null) throw new InvalidOperationException("T?o truy?n th?t b?i. Vui lï¿½ng th? l?i.");
 
         return MapToDTO(created);
+    }
+
+    public async Task<StoryDTO> CreateAsUserAsync(string userId, StoryCreateDTO dto)
+    {
+        var author = await _authorRepo.GetByApplicationUserIdAsync(userId);
+        
+        if (author is null)
+            throw new UnauthorizedAccessException("Báº¡n chÆ°a Ä‘Äƒng kÃ½ lÃ m tÃ¡c giáº£.");
+        
+        if (author.Status != "Approved")
+            throw new UnauthorizedAccessException("Báº¡n chÆ°a Ä‘Æ°á»£c phÃª duyá»‡t lÃ m tÃ¡c giáº£.");
+        
+        dto.AuthorId = author.AuthorId;
+        return await CreateAsync(dto);
     }
 
     public async Task<StoryDTO> UpdateAsync(int id, StoryUpdateDTO dto)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing is null) throw new KeyNotFoundException("Không tìm th?y truy?n ?? c?p nh?t.");
+        if (existing is null) throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y truy?n ?? c?p nh?t.");
 
         var n = Normalize(dto);
         await ValidateAsync(n);
@@ -129,10 +197,10 @@ public class StoryService : IStoryService
         };
 
         var ok = await _repo.UpdateAsync(entity, n.GenreIds);
-        if (!ok) throw new KeyNotFoundException("Không tìm th?y truy?n ?? c?p nh?t.");
+        if (!ok) throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y truy?n ?? c?p nh?t.");
 
         var updated = await _repo.GetByIdAsync(id);
-        if (updated is null) throw new InvalidOperationException("C?p nh?t truy?n th?t b?i. Vui lòng th? l?i.");
+        if (updated is null) throw new InvalidOperationException("C?p nh?t truy?n th?t b?i. Vui lï¿½ng th? l?i.");
 
         return MapToDTO(updated);
     }
@@ -161,7 +229,7 @@ public class StoryService : IStoryService
         int? primaryGenreId, string? status, List<int>? genreIds
     )
     {
-        var st = string.IsNullOrWhiteSpace(status) ? "?ang ti?n hành" : status.Trim();
+        var st = string.IsNullOrWhiteSpace(status) ? "?ang ti?n hï¿½nh" : status.Trim();
 
         var ids = (genreIds ?? new List<int>())
             .Where(x => x > 0)
@@ -186,28 +254,28 @@ public class StoryService : IStoryService
     private async Task ValidateAsync(NormalizedStory n)
     {
         if (string.IsNullOrWhiteSpace(n.Title))
-            throw new ArgumentException("Tiêu ?? truy?n không ???c ?? tr?ng.");
+            throw new ArgumentException("Tiï¿½u ?? truy?n khï¿½ng ???c ?? tr?ng.");
 
         if (n.Title.Length > 200)
-            throw new ArgumentException("Tiêu ?? truy?n t?i ?a 200 ký t?.");
+            throw new ArgumentException("Tiï¿½u ?? truy?n t?i ?a 200 kï¿½ t?.");
 
-        if (n.Status is not ("?ang ti?n hành" or "?ã hoàn thành"))
-            throw new ArgumentException("Tr?ng thái không h?p l?. Ch? ch?p nh?n: '?ang ti?n hành' ho?c '?ã hoàn thành'.");
+        if (n.Status is not ("?ang ti?n hï¿½nh" or "?ï¿½ hoï¿½n thï¿½nh"))
+            throw new ArgumentException("Tr?ng thï¿½i khï¿½ng h?p l?. Ch? ch?p nh?n: '?ang ti?n hï¿½nh' ho?c '?ï¿½ hoï¿½n thï¿½nh'.");
 
         if (!await _repo.AuthorExistsAsync(n.AuthorId))
-            throw new ArgumentException("Tác gi? không t?n t?i.");
+            throw new ArgumentException("Tï¿½c gi? khï¿½ng t?n t?i.");
 
         if (n.PrimaryGenreId is not null && !await _repo.GenreExistsAsync(n.PrimaryGenreId.Value))
-            throw new ArgumentException("Th? lo?i chính không t?n t?i.");
+            throw new ArgumentException("Th? lo?i chï¿½nh khï¿½ng t?n t?i.");
 
         if (n.GenreIds.Count > 0 && !await _repo.GenresExistAsync(n.GenreIds))
-            throw new ArgumentException("Có th? lo?i không t?n t?i.");
+            throw new ArgumentException("Cï¿½ th? lo?i khï¿½ng t?n t?i.");
 
         if (n.CoverImage is not null && n.CoverImage.Length > 500)
-            throw new ArgumentException("???ng d?n ?nh bìa t?i ?a 500 ký t?.");
+            throw new ArgumentException("???ng d?n ?nh bï¿½a t?i ?a 500 kï¿½ t?.");
 
         if (n.BannerImage is not null && n.BannerImage.Length > 500)
-            throw new ArgumentException("???ng d?n banner t?i ?a 500 ký t?.");
+            throw new ArgumentException("???ng d?n banner t?i ?a 500 kï¿½ t?.");
     }
 
     private readonly record struct NormalizedStory(

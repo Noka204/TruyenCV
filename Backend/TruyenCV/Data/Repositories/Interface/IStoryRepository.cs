@@ -21,4 +21,9 @@ public interface IStoryRepository
     Task<bool> UpdateAsync(Story story, IReadOnlyCollection<int> genreIds);
 
     Task<bool> DeleteAsync(int id);
+
+    // Top stories by reading history
+    Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByWeekAsync(int limit);
+    Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByMonthAsync(int limit);
+    Task<List<(int StoryId, int ReadCount)>> GetTopAllTimeAsync(int limit);
 }

@@ -32,5 +32,19 @@ public class Author
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [Required, StringLength(20)]
+    [Column("status")]
+    public string Status { get; set; } = "Pending"; // Pending | Approved
+
+    [Column("approved_at")]
+    public DateTime? ApprovedAt { get; set; }
+
+    [StringLength(450)]
+    [Column("approved_by")]
+    public string? ApprovedBy { get; set; }
+
+    [ForeignKey(nameof(ApprovedBy))]
+    public ApplicationUser? ApprovedByUser { get; set; }
+
     public ICollection<Story> Stories { get; set; } = new List<Story>();
 }

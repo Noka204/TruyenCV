@@ -108,11 +108,35 @@ class StoryService {
   // Tạo truyện mới
   Future<ApiResponse<Story?>> createStory(StoryCreateDTO dto) async {
     try {
-      final response = await _client.post(
+      final request = http.MultipartRequest(
+        'POST',
         Uri.parse('${ApiConfig.storiesEndpoint}/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(dto.toJson()),
       );
+
+      // Đảm bảo encoding UTF-8 cho multipart request
+      request.headers['Content-Type'] = 'multipart/form-data; charset=utf-8';
+
+      // Thêm các trường form data
+      request.fields['Title'] = dto.title;
+      request.fields['AuthorId'] = dto.authorId.toString();
+      if (dto.description != null && dto.description!.isNotEmpty) {
+        request.fields['Description'] = dto.description!;
+      }
+      if (dto.coverImage != null && dto.coverImage!.isNotEmpty) {
+        request.fields['CoverImage'] = dto.coverImage!;
+      }
+      if (dto.primaryGenreId != null) {
+        request.fields['PrimaryGenreId'] = dto.primaryGenreId.toString();
+      }
+      // Đảm bảo status được gửi đúng
+      if (dto.status.isNotEmpty) {
+        request.fields['Status'] = dto.status.trim();
+      } else {
+        request.fields['Status'] = 'Đang tiến hành';
+      }
+
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
 
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
@@ -135,11 +159,35 @@ class StoryService {
   // Cập nhật truyện
   Future<ApiResponse<Story?>> updateStory(int id, StoryUpdateDTO dto) async {
     try {
-      final response = await _client.put(
+      final request = http.MultipartRequest(
+        'PUT',
         Uri.parse('${ApiConfig.storiesEndpoint}/update-$id'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(dto.toJson()),
       );
+
+      // Đảm bảo encoding UTF-8 cho multipart request
+      request.headers['Content-Type'] = 'multipart/form-data; charset=utf-8';
+
+      // Thêm các trường form data
+      request.fields['Title'] = dto.title;
+      request.fields['AuthorId'] = dto.authorId.toString();
+      if (dto.description != null && dto.description!.isNotEmpty) {
+        request.fields['Description'] = dto.description!;
+      }
+      if (dto.coverImage != null && dto.coverImage!.isNotEmpty) {
+        request.fields['CoverImage'] = dto.coverImage!;
+      }
+      if (dto.primaryGenreId != null) {
+        request.fields['PrimaryGenreId'] = dto.primaryGenreId.toString();
+      }
+      // Đảm bảo status được gửi đúng
+      if (dto.status.isNotEmpty) {
+        request.fields['Status'] = dto.status.trim();
+      } else {
+        request.fields['Status'] = 'Đang tiến hành';
+      }
+
+      final streamedResponse = await _client.send(request);
+      final response = await http.Response.fromStream(streamedResponse);
 
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {

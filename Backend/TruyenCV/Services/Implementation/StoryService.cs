@@ -1,4 +1,4 @@
-using TruyenCV.Data.Repositories.Interface;
+﻿using TruyenCV.Data.Repositories.Interface;
 using TruyenCV.Dtos.Stories;
 using TruyenCV.Models;
 using TruyenCV.Services.IService;
@@ -258,7 +258,7 @@ public class StoryService : IStoryService
         int? primaryGenreId, string? status, List<int>? genreIds
     )
     {
-        var st = string.IsNullOrWhiteSpace(status) ? "?ang ti?n h�nh" : status.Trim();
+        var st = string.IsNullOrWhiteSpace(status) ? "\u0110ang ti\u1EBFn h\u00E0nh" : status.Trim();
 
         var ids = (genreIds ?? new List<int>())
             .Where(x => x > 0)
@@ -288,11 +288,11 @@ public class StoryService : IStoryService
         if (n.Title.Length > 200)
             throw new ArgumentException("Ti�u ?? truy?n t?i ?a 200 k� t?.");
 
-        if (n.Status is not ("?ang ti?n h�nh" or "?� ho�n th�nh"))
-            throw new ArgumentException("Tr?ng th�i kh�ng h?p l?. Ch? ch?p nh?n: '?ang ti?n h�nh' ho?c '?� ho�n th�nh'.");
-
-        if (!await _repo.AuthorExistsAsync(n.AuthorId))
-            throw new ArgumentException("T�c gi? kh�ng t?n t?i.");
+        var normalizedStatus = n.Status.Trim();
+        const string statusOngoing = "\u0110ang ti\u1EBFn h\u00E0nh";
+        const string statusCompleted = "\u0110\u00E3 ho\u00E0n th\u00E0nh";
+        if (normalizedStatus != statusOngoing && normalizedStatus != statusCompleted)
+            throw new ArgumentException("Tráº¡ng thÃ¡i khÃ´ng há»£p lá»‡. Chá»‰ cháº¥p nháº­n: 'Äang tiáº¿n hÃ nh' hoáº·c 'ÄÃ£ hoÃ n thÃ nh'.");
 
         if (n.PrimaryGenreId is not null && !await _repo.GenreExistsAsync(n.PrimaryGenreId.Value))
             throw new ArgumentException("Th? lo?i ch�nh kh�ng t?n t?i.");

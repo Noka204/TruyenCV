@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'top_rated_screen.dart';
 import 'bookmark_screen.dart';
 import 'reading_history_screen.dart';
 import 'menu_screen.dart';
@@ -16,6 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   // Tạo UniqueKey cho mỗi screen con để đảm bảo chúng được tạo mới hoàn toàn
   late final List<Widget> _screens = [
     HomeScreen(key: UniqueKey()),
+    TopRatedScreen(key: UniqueKey()),
     BookmarkScreen(key: UniqueKey()),
     ReadingHistoryScreen(key: UniqueKey()),
     MenuScreen(key: UniqueKey()),
@@ -37,6 +39,7 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Xếp hạng'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Đã lưu'),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Lịch sử'),
           BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'Menu'),

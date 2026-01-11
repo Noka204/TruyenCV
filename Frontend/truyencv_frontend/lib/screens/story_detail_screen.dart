@@ -9,6 +9,7 @@ import '../services/comment_service.dart';
 import '../models/bookmark.dart';
 import '../models/rating.dart';
 import '../models/comment.dart';
+import '../models/api_response.dart';
 import 'home_screen.dart';
 import 'chapters_list_screen.dart';
 
@@ -36,6 +37,9 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   bool _isBookmarked = false;
   bool _isBookmarking = false;
   RatingSummary? _ratingSummary;
+  Rating? _myRating;
+  bool _isSubmittingRating = false;
+  int? _selectedRating;
   List<Comment> _comments = [];
   bool _isLoadingComments = false;
   bool _isLoadingRating = false;
@@ -96,15 +100,136 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       _isLoadingRating = true;
     });
 
-    final response = await _ratingService.getRatingSummary(widget.storyId);
+    try {
+      final response = await _ratingService.getRatingSummary(widget.storyId);
 
-    if (mounted) {
-      setState(() {
-        _isLoadingRating = false;
-        if (response.status && response.data != null) {
-          _ratingSummary = response.data;
+      if (mounted) {
+        setState(() {
+          _isLoadingRating = false;
+          if (response.status && response.data != null) {
+            _ratingSummary = response.data;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingRating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMyRating() async {
+    final authService = AuthService();
+    if (authService.token == null) {
+      return; // Không load nếu chưa đăng nhập
+    }
+
+    try {
+      final response = await _ratingService.getMyRating(widget.storyId);
+
+      if (mounted) {
+        setState(() {
+          if (response.status && response.data != null) {
+            _myRating = response.data;
+            _selectedRating = response.data!.score;
+          } else {
+            _myRating = null;
+            _selectedRating = null;
+          }
+        });
+      }
+    } catch (e) {
+      // Xử lý lỗi im lặng
+      if (mounted) {
+        setState(() {
+          _myRating = null;
+          _selectedRating = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _submitRating() async {
+    if (_selectedRating == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn số sao đánh giá'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final authService = AuthService();
+    if (authService.token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để đánh giá'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmittingRating = true;
+    });
+
+    try {
+      ApiResponse response;
+      if (_myRating != null) {
+        // Cập nhật rating đã có
+        response = await _ratingService.updateRating(
+          _myRating!.ratingId,
+          RatingUpdateDTO(score: _selectedRating!),
+        );
+      } else {
+        // Tạo rating mới
+        response = await _ratingService.createRating(
+          RatingCreateDTO(
+            storyId: widget.storyId,
+            score: _selectedRating!,
+          ),
+        );
+      }
+
+      if (mounted) {
+        if (response.status) {
+          // Reload rating của user và summary
+          await _loadMyRating();
+          await _loadRatingSummary();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đánh giá thành công'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response.message),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
-      });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmittingRating = false;
+        });
+      }
     }
   }
 
@@ -229,6 +354,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       _loadAuthorName(story.authorId);
       _checkBookmarkStatus();
       _loadRatingSummary();
+      _loadMyRating();
       _loadComments();
     } else {
       setState(() {
@@ -632,6 +758,9 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   }
 
   Widget _buildRatingSection() {
+    final authService = AuthService();
+    final isLoggedIn = authService.token != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -669,6 +798,67 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
           )
         else
           const Text('Chưa có đánh giá', style: TextStyle(color: Colors.grey)),
+        const SizedBox(height: 16),
+        // UI đánh giá của user
+        if (isLoggedIn) ...[
+          const Text(
+            'Đánh giá của bạn:',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(5, (index) {
+              final starValue = index + 1;
+              final isSelected = _selectedRating != null && starValue <= _selectedRating!;
+              return GestureDetector(
+                onTap: _isSubmittingRating
+                    ? null
+                    : () {
+                        setState(() {
+                          _selectedRating = starValue;
+                        });
+                      },
+                child: Icon(
+                  isSelected ? Icons.star : Icons.star_border,
+                  color: isSelected ? Colors.amber : Colors.grey,
+                  size: 40,
+                ),
+              );
+            }),
+          ),
+          if (_myRating != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Bạn đã đánh giá ${_myRating!.score} sao',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
+            ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _isSubmittingRating || _selectedRating == null
+                ? null
+                : _submitRating,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+            ),
+            child: _isSubmittingRating
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Gửi đánh giá'),
+          ),
+        ] else
+          Text(
+            'Đăng nhập để đánh giá truyện này',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
       ],
     );
   }

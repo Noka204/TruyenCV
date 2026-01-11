@@ -29,6 +29,24 @@ class RatingService {
         headers: _getHeaders(),
       );
 
+      // Kiểm tra status code
+      if (response.statusCode != 200) {
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: null,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: false,
+          message: 'Response body rỗng',
+          data: null,
+        );
+      }
+
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
         if (data is List) {
@@ -41,9 +59,13 @@ class RatingService {
 
       return apiResponse;
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
         data: null,
       );
     }
@@ -57,6 +79,24 @@ class RatingService {
         headers: _getHeaders(),
       );
 
+      // Kiểm tra status code
+      if (response.statusCode != 200) {
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: null,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: false,
+          message: 'Response body rỗng',
+          data: null,
+        );
+      }
+
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
         if (data != null && data is Map) {
@@ -67,9 +107,80 @@ class RatingService {
 
       return apiResponse;
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
+        data: null,
+      );
+    }
+  }
+
+  // Lấy rating của user hiện tại cho story
+  Future<ApiResponse<Rating?>> getMyRating(int storyId) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('${ApiConfig.ratingsEndpoint}/my-rating/$storyId'),
+        headers: _getHeaders(),
+      );
+
+      // Kiểm tra status code
+      if (response.statusCode == 404) {
+        // Không tìm thấy rating - đây là trường hợp bình thường
+        return ApiResponse(
+          status: true,
+          message: 'Bạn chưa đánh giá truyện này',
+          data: null,
+        );
+      }
+
+      if (response.statusCode != 200) {
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: null,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: true,
+          message: 'Bạn chưa đánh giá truyện này',
+          data: null,
+        );
+      }
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      
+      // Kiểm tra nếu data là null (user chưa đánh giá)
+      if (jsonData['data'] == null) {
+        return ApiResponse(
+          status: true,
+          message: jsonData['message'] as String? ?? 'Bạn chưa đánh giá truyện này',
+          data: null,
+        );
+      }
+
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is Map) {
+          return Rating.fromJson(data as Map<String, dynamic>);
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
+      return ApiResponse(
+        status: false,
+        message: errorMessage,
         data: null,
       );
     }
@@ -84,6 +195,35 @@ class RatingService {
         body: json.encode(dto.toJson()),
       );
 
+      // Kiểm tra status code
+      if (response.statusCode != 201 && response.statusCode != 200) {
+        // Thử parse error message
+        try {
+          if (response.body.isNotEmpty) {
+            final errorData = json.decode(response.body) as Map<String, dynamic>;
+            return ApiResponse(
+              status: false,
+              message: errorData['message'] as String? ?? 'Lỗi tạo rating',
+              data: null,
+            );
+          }
+        } catch (_) {}
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: null,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: false,
+          message: 'Response body rỗng',
+          data: null,
+        );
+      }
+
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) {
         if (data != null && data is Map) {
@@ -94,9 +234,13 @@ class RatingService {
 
       return apiResponse;
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
         data: null,
       );
     }
@@ -111,14 +255,47 @@ class RatingService {
         body: json.encode(dto.toJson()),
       );
 
+      // Kiểm tra status code
+      if (response.statusCode != 200) {
+        // Thử parse error message
+        try {
+          if (response.body.isNotEmpty) {
+            final errorData = json.decode(response.body) as Map<String, dynamic>;
+            return ApiResponse(
+              status: false,
+              message: errorData['message'] as String? ?? 'Lỗi cập nhật rating',
+              data: false,
+            );
+          }
+        } catch (_) {}
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: false,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: false,
+          message: 'Response body rỗng',
+          data: false,
+        );
+      }
+
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) => true);
 
       return apiResponse;
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
         data: false,
       );
     }
@@ -132,14 +309,47 @@ class RatingService {
         headers: _getHeaders(),
       );
 
+      // Kiểm tra status code
+      if (response.statusCode != 200) {
+        // Thử parse error message
+        try {
+          if (response.body.isNotEmpty) {
+            final errorData = json.decode(response.body) as Map<String, dynamic>;
+            return ApiResponse(
+              status: false,
+              message: errorData['message'] as String? ?? 'Lỗi xóa rating',
+              data: false,
+            );
+          }
+        } catch (_) {}
+        return ApiResponse(
+          status: false,
+          message: 'Lỗi: ${response.statusCode}',
+          data: false,
+        );
+      }
+
+      // Kiểm tra response body có rỗng không
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: false,
+          message: 'Response body rỗng',
+          data: false,
+        );
+      }
+
       final jsonData = json.decode(response.body) as Map<String, dynamic>;
       final apiResponse = ApiResponse.fromJson(jsonData, (data) => true);
 
       return apiResponse;
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage = 'Lỗi parse JSON: Response không hợp lệ';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
         data: false,
       );
     }

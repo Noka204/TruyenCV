@@ -288,6 +288,48 @@ class StoryService {
     }
   }
 
+  // Lấy truyện xếp hạng (top-rated)
+  Future<ApiResponse<List<StoryListItem>?>> getTopRatedStories({
+    int page = 1,
+    int pageSize = 10,
+    String? period,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.storiesEndpoint}/top-rated').replace(
+        queryParameters: {
+          'page': page.toString(),
+          'pageSize': pageSize.toString(),
+          if (period != null && period.isNotEmpty) 'period': period,
+        },
+      );
+
+      final response = await _client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonData = json.decode(response.body) as Map<String, dynamic>;
+      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
+        if (data != null && data is List) {
+          return data.map((item) {
+            return StoryListItem.fromJson(
+              item as Map<String, dynamic>,
+            );
+          }).toList();
+        }
+        return null;
+      });
+
+      return apiResponse;
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
   // Lấy truyện theo tác giả
   Future<ApiResponse<List<StoryListItem>?>> getStoriesByAuthor(
     int authorId,

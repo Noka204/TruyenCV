@@ -14,7 +14,7 @@ public class ReadingHistoryService : IReadingHistoryService
     public async Task<List<ReadingHistoryListItemDTO>> GetUserReadingHistoryAsync(string userId, int page = 1, int pageSize = 10)
     {
         if (!await _repo.UserExistsAsync(userId))
-            throw new KeyNotFoundException("Không tìm th?y ng??i dùng.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y ng??i dï¿½ng.");
 
         var histories = await _repo.GetUserReadingHistoryAsync(userId, page, pageSize);
         return histories.Select(MapToListItemDTO).ToList();
@@ -23,7 +23,7 @@ public class ReadingHistoryService : IReadingHistoryService
     public async Task<int> GetUserReadingHistoryCountAsync(string userId)
     {
         if (!await _repo.UserExistsAsync(userId))
-            throw new KeyNotFoundException("Không tìm th?y ng??i dùng.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y ng??i dï¿½ng.");
 
         return await _repo.GetUserReadingHistoryCountAsync(userId);
     }
@@ -38,15 +38,15 @@ public class ReadingHistoryService : IReadingHistoryService
     {
         // Validate user exists
         if (!await _repo.UserExistsAsync(userId))
-            throw new KeyNotFoundException("Không tìm th?y ng??i dùng.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y ng??i dï¿½ng.");
 
         // Validate story exists
         if (!await _repo.StoryExistsAsync(dto.StoryId))
-            throw new KeyNotFoundException("Không tìm th?y truy?n.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y truy?n.");
 
         // Validate chapter exists if provided
         if (dto.LastReadChapterId.HasValue && !await _repo.ChapterExistsAsync(dto.LastReadChapterId.Value))
-            throw new KeyNotFoundException("Không tìm th?y ch??ng.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y ch??ng.");
 
         // Check if history already exists for this user and story
         var existing = await _repo.GetByUserAndStoryAsync(userId, dto.StoryId);
@@ -85,15 +85,15 @@ public class ReadingHistoryService : IReadingHistoryService
     {
         var existing = await _repo.GetByIdAsync(historyId);
         if (existing is null)
-            throw new KeyNotFoundException("Không tìm th?y l?ch s? ??c.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y l?ch s? ??c.");
 
         // Only the owner can update
         if (existing.ApplicationUserId != userId)
-            throw new UnauthorizedAccessException("B?n ch? có th? c?p nh?t l?ch s? ??c c?a mình.");
+            throw new UnauthorizedAccessException("B?n ch? cï¿½ th? c?p nh?t l?ch s? ??c c?a mï¿½nh.");
 
         // Validate chapter exists if provided
         if (dto.LastReadChapterId.HasValue && !await _repo.ChapterExistsAsync(dto.LastReadChapterId.Value))
-            throw new KeyNotFoundException("Không tìm th?y ch??ng.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y ch??ng.");
 
         existing.LastReadChapterId = dto.LastReadChapterId;
         existing.UpdatedAt = DateTime.UtcNow;
@@ -113,11 +113,11 @@ public class ReadingHistoryService : IReadingHistoryService
     {
         var history = await _repo.GetByIdAsync(historyId);
         if (history is null)
-            throw new KeyNotFoundException("Không tìm th?y l?ch s? ??c.");
+            throw new KeyNotFoundException("Khï¿½ng tï¿½m th?y l?ch s? ??c.");
 
         // Only the owner can delete
         if (history.ApplicationUserId != userId)
-            throw new UnauthorizedAccessException("B?n ch? có th? xóa l?ch s? ??c c?a mình.");
+            throw new UnauthorizedAccessException("B?n ch? cï¿½ th? xï¿½a l?ch s? ??c c?a mï¿½nh.");
 
         return await _repo.DeleteAsync(historyId);
     }

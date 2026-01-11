@@ -207,4 +207,41 @@ public class StoryRepository : IStoryRepository
 
         return topStories.Select(x => (x.StoryId, x.ReadCount)).ToList();
     }
+
+    // Top rated stories by ratings
+    public async Task<List<(int StoryId, double AverageScore, int TotalRatings)>> GetTopRatedAsync(int page, int pageSize, string? period = null)
+    {
+        var skip = (page - 1) * pageSize;
+        
+        IQueryable<Rating> query = _db.Ratings.AsNoTracking();
+        
+        // Filter by period
+        if (period == "week")
+        {
+            var weekAgo = DateTime.UtcNow.AddDays(-7);
+            query = query.Where(r => r.CreatedAt >= weekAgo);
+        }
+        else if (period == "month")
+        {
+            var monthAgo = DateTime.UtcNow.AddDays(-30);
+            query = query.Where(r => r.CreatedAt >= monthAgo);
+        }
+        // period == "all" or null means all time (no filter)
+        
+        var topRated = await query
+            .GroupBy(r => r.StoryId)
+            .Select(g => new
+            {
+                StoryId = g.Key,
+                AverageScore = Math.Round(g.Average(r => (double)r.Score), 2),
+                TotalRatings = g.Count()
+            })
+            .OrderByDescending(x => x.AverageScore)
+            .ThenByDescending(x => x.TotalRatings)
+            .Skip(skip)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        return topRated.Select(x => (x.StoryId, x.AverageScore, x.TotalRatings)).ToList();
+    }
 }

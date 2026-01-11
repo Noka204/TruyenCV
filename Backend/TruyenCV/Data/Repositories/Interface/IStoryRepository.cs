@@ -26,4 +26,7 @@ public interface IStoryRepository
     Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByWeekAsync(int limit);
     Task<List<(int StoryId, int ReadCount)>> GetTopStoriesByMonthAsync(int limit);
     Task<List<(int StoryId, int ReadCount)>> GetTopAllTimeAsync(int limit);
+    
+    // Top rated stories by ratings
+    Task<List<(int StoryId, double AverageScore, int TotalRatings)>> GetTopRatedAsync(int page, int pageSize, string? period = null);
 }

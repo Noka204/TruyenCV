@@ -43,7 +43,30 @@ public class RatingsController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Employee,Admin")]
+    [Authorize]
+    [HttpGet("my-rating/{storyId:int}")]
+    public async Task<IActionResult> GetMyRating(int storyId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { status = false, message = "Người dùng chưa xác thực.", data = (object?)null });
+
+        try
+        {
+            var data = await _service.GetByUserAndStoryAsync(userId, storyId);
+            if (data == null)
+            {
+                return Ok(new { status = true, message = "Bạn chưa đánh giá truyện này.", data = (object?)null });
+            }
+            return Ok(new { status = true, message = "Lấy đánh giá của bạn thành công.", data });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { status = false, message = "Không tìm thấy truyện.", data = (object?)null });
+        }
+    }
+
+    [Authorize]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] RatingCreateDTO dto)
     {
@@ -65,7 +88,7 @@ public class RatingsController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Employee,Admin")]
+    [Authorize]
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] RatingUpdateDTO dto)
     {

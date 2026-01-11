@@ -98,6 +98,35 @@ public class StoryService : IStoryService
         return await BuildTopStoriesDTOs(topStoryIds);
     }
 
+    public async Task<List<StoryListItemDTO>> GetTopRatedAsync(int page = 1, int pageSize = 10, string? period = null)
+    {
+        // Normalize period: "all" or null means all time
+        var normalizedPeriod = period == "all" ? null : period;
+        
+        var topRated = await _repo.GetTopRatedAsync(page, pageSize, normalizedPeriod);
+        
+        if (topRated.Count == 0)
+            return new List<StoryListItemDTO>();
+        
+        var storyIds = topRated.Select(x => x.StoryId).ToList();
+        var stories = await _repo.GetAllAsync();
+        var storiesDict = stories
+            .Where(s => storyIds.Contains(s.StoryId))
+            .ToDictionary(s => s.StoryId);
+        
+        // Maintain order from topRated
+        var result = new List<StoryListItemDTO>();
+        foreach (var (storyId, _, _) in topRated)
+        {
+            if (storiesDict.TryGetValue(storyId, out var story))
+            {
+                result.Add(MapToListItemDTO(story));
+            }
+        }
+        
+        return result;
+    }
+
     private async Task<List<StoryTopDTO>> BuildTopStoriesDTOs(List<(int StoryId, int ReadCount)> topStories)
     {
         if (topStories.Count == 0)

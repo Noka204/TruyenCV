@@ -182,6 +182,30 @@ public class StoriesController : ControllerBase
         }
     }
 
+    [HttpGet("top-rated")]
+    public async Task<IActionResult> GetTopRated([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? period = null)
+    {
+        try
+        {
+            if (page < 1)
+                return BadRequest(new { status = false, message = "Trang phải từ 1 trở lên.", data = (object?)null });
+            
+            if (pageSize < 1 || pageSize > 100)
+                return BadRequest(new { status = false, message = "Kích thước trang phải từ 1 đến 100.", data = (object?)null });
+
+            // Validate period parameter
+            if (period != null && period != "all" && period != "month" && period != "week")
+                return BadRequest(new { status = false, message = "Period không hợp lệ. Chỉ chấp nhận: 'all', 'month', 'week' hoặc null.", data = (object?)null });
+
+            var data = await _service.GetTopRatedAsync(page, pageSize, period);
+            return Ok(new { status = true, message = "Lấy danh sách truyện xếp hạng thành công.", data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
+        }
+    }
+
     // ===== User Story Creation =====
 
     [Authorize]

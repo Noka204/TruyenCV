@@ -21,15 +21,15 @@ public class ReadingHistoriesController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         try
         {
             if (page < 1)
-                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lên.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lï¿½n.", data = (object?)null });
 
             if (pageSize < 1 || pageSize > 100)
-                return BadRequest(new { status = false, message = "Kích th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Kï¿½ch th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
 
             var histories = await _service.GetUserReadingHistoryAsync(userId, page, pageSize);
             var count = await _service.GetUserReadingHistoryCountAsync(userId);
@@ -37,13 +37,13 @@ public class ReadingHistoriesController : ControllerBase
             return Ok(new
             {
                 status = true,
-                message = "L?y danh sách l?ch s? ??c thành công.",
+                message = "L?y danh sï¿½ch l?ch s? ??c thï¿½nh cï¿½ng.",
                 data = new { histories, total = count, page, pageSize }
             });
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new { status = false, message = "Không tìm th?y ng??i dùng.", data = (object?)null });
+            return NotFound(new { status = false, message = "Khï¿½ng tï¿½m th?y ng??i dï¿½ng.", data = (object?)null });
         }
         catch (Exception ex)
         {
@@ -56,15 +56,15 @@ public class ReadingHistoriesController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
             var created = await _service.CreateAsync(userId, dto);
-            return StatusCode(201, new { status = true, message = "L?ch s? ??c ???c t?o thành công.", data = created });
+            return StatusCode(201, new { status = true, message = "L?ch s? ??c ???c t?o thï¿½nh cï¿½ng.", data = created });
         }
         catch (ArgumentException ex)
         {
@@ -85,15 +85,15 @@ public class ReadingHistoriesController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
             var updated = await _service.UpdateAsync(id, userId, dto);
-            return Ok(new { status = true, message = "C?p nh?t l?ch s? ??c thành công.", data = updated });
+            return Ok(new { status = true, message = "C?p nh?t l?ch s? ??c thï¿½nh cï¿½ng.", data = updated });
         }
         catch (ArgumentException ex)
         {
@@ -118,14 +118,14 @@ public class ReadingHistoriesController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         try
         {
             var ok = await _service.DeleteAsync(id, userId);
             return ok
-                ? Ok(new { status = true, message = "Xóa l?ch s? ??c thành công.", data = new { historyId = id } })
-                : NotFound(new { status = false, message = "Không tìm th?y l?ch s? ??c ?? xóa.", data = (object?)null });
+                ? Ok(new { status = true, message = "Xï¿½a l?ch s? ??c thï¿½nh cï¿½ng.", data = new { historyId = id } })
+                : NotFound(new { status = false, message = "Khï¿½ng tï¿½m th?y l?ch s? ??c ?? xï¿½a.", data = (object?)null });
         }
         catch (KeyNotFoundException ex)
         {
@@ -146,6 +146,6 @@ public class ReadingHistoriesController : ControllerBase
             .Where(x => x.Value?.Errors.Count > 0)
             .ToDictionary(
                 k => k.Key,
-                v => v.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u không h?p l?." : e.ErrorMessage).ToArray()
+                v => v.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u khï¿½ng h?p l?." : e.ErrorMessage).ToArray()
             );
 }

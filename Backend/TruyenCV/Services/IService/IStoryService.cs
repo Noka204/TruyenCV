@@ -26,4 +26,7 @@ public interface IStoryService
     Task<List<StoryTopDTO>> GetTopWeeklyAsync(int limit = 10);
     Task<List<StoryTopDTO>> GetTopMonthlyAsync(int limit = 10);
     Task<List<StoryTopDTO>> GetTopAllTimeAsync(int limit = 10);
+    
+    // Top rated stories by ratings
+    Task<List<StoryListItemDTO>> GetTopRatedAsync(int page = 1, int pageSize = 10, string? period = null);
 }

@@ -88,9 +88,14 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-
+// CORS phải đứng trước UseHttpsRedirection
 app.UseCors("AllowClient");
+
+// Tắt HTTPS redirection trong Development
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

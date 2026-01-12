@@ -26,6 +26,7 @@ public class AuthorsController : ControllerBase
             : Ok(new { status = true, message = "Lấy thông tin tác giả thành công.", data = dto });
     }
 
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] AuthorCreateDTO dto)
     {
@@ -43,6 +44,7 @@ public class AuthorsController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] AuthorUpdateDTO dto)
     {
@@ -61,7 +63,7 @@ public class AuthorsController : ControllerBase
             return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete-{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

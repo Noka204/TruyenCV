@@ -13,6 +13,7 @@ public class GenresController : ControllerBase
     private readonly IGenreService _service;
     public GenresController(IGenreService service) => _service = service;
 
+    [Authorize]
     [HttpGet("all")]
     public async Task<IActionResult> GetAll()
         => Ok(new { status = true, message = "Lấy danh sách thể loại thành công.", data = await _service.GetAllAsync() });
@@ -26,7 +27,7 @@ public class GenresController : ControllerBase
             : Ok(new { status = true, message = "Lấy thông tin thể loại thành công.", data = dto });
     }
 
-
+    [Authorize]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] GenreCreateDTO dto)
     {
@@ -43,7 +44,7 @@ public class GenresController : ControllerBase
             return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    [Authorize]
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] GenreUpdateDTO dto)
     {
@@ -64,7 +65,7 @@ public class GenresController : ControllerBase
             return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpDelete("delete-{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -21,10 +21,10 @@ public class CommentsController : ControllerBase
         try
         {
             if (page < 1)
-                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lên.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lï¿½n.", data = (object?)null });
 
             if (pageSize < 1 || pageSize > 100)
-                return BadRequest(new { status = false, message = "Kích th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Kï¿½ch th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
 
             var comments = await _service.GetByStoryAsync(storyId, page, pageSize);
             var count = await _service.GetStoryCommentCountAsync(storyId);
@@ -32,13 +32,13 @@ public class CommentsController : ControllerBase
             return Ok(new 
             { 
                 status = true, 
-                message = "L?y danh sách bình lu?n truy?n thành công.", 
+                message = "L?y danh sï¿½ch bï¿½nh lu?n truy?n thï¿½nh cï¿½ng.", 
                 data = new { comments, total = count, page, pageSize }
             });
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new { status = false, message = "Không tìm th?y truy?n.", data = (object?)null });
+            return NotFound(new { status = false, message = "Khï¿½ng tï¿½m th?y truy?n.", data = (object?)null });
         }
     }
 
@@ -48,10 +48,10 @@ public class CommentsController : ControllerBase
         try
         {
             if (page < 1)
-                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lên.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Trang ph?i t? 1 tr? lï¿½n.", data = (object?)null });
 
             if (pageSize < 1 || pageSize > 100)
-                return BadRequest(new { status = false, message = "Kích th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
+                return BadRequest(new { status = false, message = "Kï¿½ch th??c trang ph?i t? 1 ??n 100.", data = (object?)null });
 
             var comments = await _service.GetByChapterAsync(chapterId, page, pageSize);
             var count = await _service.GetChapterCommentCountAsync(chapterId);
@@ -59,13 +59,13 @@ public class CommentsController : ControllerBase
             return Ok(new 
             { 
                 status = true, 
-                message = "L?y danh sách bình lu?n ch??ng thành công.", 
+                message = "L?y danh sï¿½ch bï¿½nh lu?n ch??ng thï¿½nh cï¿½ng.", 
                 data = new { comments, total = count, page, pageSize }
             });
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new { status = false, message = "Không tìm th?y ch??ng.", data = (object?)null });
+            return NotFound(new { status = false, message = "Khï¿½ng tï¿½m th?y ch??ng.", data = (object?)null });
         }
     }
 
@@ -75,17 +75,17 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
             dto.ChapterId = chapterId;
             dto.StoryId = null;
             var created = await _service.CreateAsync(userId, dto);
-            return StatusCode(201, new { status = true, message = "T?o bình lu?n thành công.", data = created });
+            return StatusCode(201, new { status = true, message = "T?o bï¿½nh lu?n thï¿½nh cï¿½ng.", data = created });
         }
         catch (ArgumentException ex)
         {
@@ -107,15 +107,15 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
             var created = await _service.CreateAsync(userId, dto);
-            return StatusCode(201, new { status = true, message = "T?o bình lu?n thành công.", data = created });
+            return StatusCode(201, new { status = true, message = "T?o bï¿½nh lu?n thï¿½nh cï¿½ng.", data = created });
         }
         catch (ArgumentException ex)
         {
@@ -137,15 +137,15 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         try
         {
             var updated = await _service.UpdateAsync(id, userId, dto);
-            return Ok(new { status = true, message = "C?p nh?t bình lu?n thành công.", data = updated });
+            return Ok(new { status = true, message = "C?p nh?t bï¿½nh lu?n thï¿½nh cï¿½ng.", data = updated });
         }
         catch (ArgumentException ex)
         {
@@ -171,14 +171,14 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { status = false, message = "Ng??i dùng ch?a xác th?c.", data = (object?)null });
+            return Unauthorized(new { status = false, message = "Ng??i dï¿½ng ch?a xï¿½c th?c.", data = (object?)null });
 
         try
         {
             var ok = await _service.DeleteAsync(id, userId);
             return ok
-                ? Ok(new { status = true, message = "Xóa bình lu?n thành công.", data = new { commentId = id } })
-                : NotFound(new { status = false, message = "Không tìm th?y bình lu?n ?? xóa.", data = (object?)null });
+                ? Ok(new { status = true, message = "Xï¿½a bï¿½nh lu?n thï¿½nh cï¿½ng.", data = new { commentId = id } })
+                : NotFound(new { status = false, message = "Khï¿½ng tï¿½m th?y bï¿½nh lu?n ?? xï¿½a.", data = (object?)null });
         }
         catch (KeyNotFoundException ex)
         {
@@ -199,6 +199,6 @@ public class CommentsController : ControllerBase
             .Where(x => x.Value?.Errors.Count > 0)
             .ToDictionary(
                 k => k.Key,
-                v => v.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u không h?p l?." : e.ErrorMessage).ToArray()
+                v => v.Value!.Errors.Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u khï¿½ng h?p l?." : e.ErrorMessage).ToArray()
             );
 }

@@ -27,6 +27,7 @@ public class FollowAuthorsController : ControllerBase
     /// <summary>
     /// Get current user's followed authors with pagination
     /// </summary>
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetMyFollowedAuthors([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
@@ -54,6 +55,7 @@ public class FollowAuthorsController : ControllerBase
     /// <summary>
     /// Check if current user is following a specific author
     /// </summary>
+    [Authorize]
     [HttpGet("check/{authorId}")]
     public async Task<IActionResult> CheckFollowing(int authorId)
     {
@@ -72,6 +74,7 @@ public class FollowAuthorsController : ControllerBase
     /// <summary>
     /// Get specific follow by author ID
     /// </summary>
+    [Authorize]
     [HttpGet("{authorId}")]
     public async Task<IActionResult> GetFollowByAuthorId(int authorId)
     {
@@ -94,6 +97,7 @@ public class FollowAuthorsController : ControllerBase
     /// <summary>
     /// Follow an author
     /// </summary>
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> FollowAuthor([FromBody] FollowAuthorCreateDTO dto)
     {
@@ -120,6 +124,7 @@ public class FollowAuthorsController : ControllerBase
     /// <summary>
     /// Unfollow an author
     /// </summary>
+    [Authorize]
     [HttpDelete("{authorId}")]
     public async Task<IActionResult> UnfollowAuthor(int authorId)
     {

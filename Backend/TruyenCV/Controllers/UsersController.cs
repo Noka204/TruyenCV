@@ -21,7 +21,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterDTO dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         var (success, message, data) = await _authService.RegisterAsync(dto);
 
@@ -35,7 +35,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDTO dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new { status = false, message = "D? li?u không h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
+            return BadRequest(new { status = false, message = "D? li?u khï¿½ng h?p l?.", data = (object?)null, errors = ToErrorDict(ModelState) });
 
         var (success, message, data) = await _authService.LoginAsync(dto);
 
@@ -51,7 +51,7 @@ public class UsersController : ControllerBase
     {
         // Note: For stateless APIs, logout is typically handled client-side by removing the token.
         // If using session-based authentication, you would call SignOutAsync here.
-        return Ok(new { status = true, message = "??ng xu?t thành công.", data = (object?)null });
+        return Ok(new { status = true, message = "??ng xu?t thï¿½nh cï¿½ng.", data = (object?)null });
     }
 
     private static Dictionary<string, string[]> ToErrorDict(ModelStateDictionary modelState)
@@ -60,7 +60,7 @@ public class UsersController : ControllerBase
             .ToDictionary(
                 k => k.Key,
                 v => v.Value!.Errors
-                    .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u không h?p l?." : e.ErrorMessage)
+                    .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? "D? li?u khï¿½ng h?p l?." : e.ErrorMessage)
                     .ToArray()
             );
 }

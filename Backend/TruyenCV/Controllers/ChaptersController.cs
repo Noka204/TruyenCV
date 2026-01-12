@@ -35,7 +35,7 @@ public class ChaptersController : ControllerBase
             return NotFound(new { status = false, message = "Không tìm thấy truyện.", data = (object?)null });
         }
     }
-
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] ChapterCreateDTO dto)
     {
@@ -52,7 +52,7 @@ public class ChaptersController : ControllerBase
             return BadRequest(new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] ChapterUpdateDTO dto)
     {

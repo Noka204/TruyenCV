@@ -16,6 +16,7 @@ public class BookmarksController : ControllerBase
 
     public BookmarksController(IBookmarkService service) => _service = service;
 
+    [Authorize]
     [HttpGet("my-bookmarks")]
     public async Task<IActionResult> GetMyBookmarks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
@@ -51,7 +52,7 @@ public class BookmarksController : ControllerBase
         }
     }
 
-
+    [Authorize]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] BookmarkCreateDTO dto)
     {
@@ -85,6 +86,7 @@ public class BookmarksController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("delete/{storyId:int}")]
     public async Task<IActionResult> Delete(int storyId)
     {

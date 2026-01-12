@@ -118,7 +118,7 @@ public class RatingsController : ControllerBase
         }
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpDelete("delete-{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

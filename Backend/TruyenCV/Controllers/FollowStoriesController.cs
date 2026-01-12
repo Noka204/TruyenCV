@@ -27,6 +27,7 @@ public class FollowStoriesController : ControllerBase
     /// <summary>
     /// Get current user's followed stories with pagination
     /// </summary>
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetMyFollowedStories([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
@@ -54,6 +55,7 @@ public class FollowStoriesController : ControllerBase
     /// <summary>
     /// Check if current user is following a specific story
     /// </summary>
+    [Authorize]
     [HttpGet("check/{storyId}")]
     public async Task<IActionResult> CheckFollowing(int storyId)
     {
@@ -72,6 +74,7 @@ public class FollowStoriesController : ControllerBase
     /// <summary>
     /// Get specific follow by story ID
     /// </summary>
+    [Authorize]
     [HttpGet("{storyId}")]
     public async Task<IActionResult> GetFollowByStoryId(int storyId)
     {
@@ -94,6 +97,7 @@ public class FollowStoriesController : ControllerBase
     /// <summary>
     /// Follow a story
     /// </summary>
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> FollowStory([FromBody] FollowStoryCreateDTO dto)
     {
@@ -120,6 +124,7 @@ public class FollowStoriesController : ControllerBase
     /// <summary>
     /// Unfollow a story
     /// </summary>
+    [Authorize]
     [HttpDelete("{storyId}")]
     public async Task<IActionResult> UnfollowStory(int storyId)
     {

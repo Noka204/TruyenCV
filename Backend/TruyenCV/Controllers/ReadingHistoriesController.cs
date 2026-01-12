@@ -15,7 +15,8 @@ public class ReadingHistoriesController : ControllerBase
     private readonly IReadingHistoryService _service;
 
     public ReadingHistoriesController(IReadingHistoryService service) => _service = service;
-
+    
+    [Authorize]
     [HttpGet("my-history")]
     public async Task<IActionResult> GetMyReadingHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
@@ -50,7 +51,8 @@ public class ReadingHistoriesController : ControllerBase
             return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    
+    [Authorize]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] ReadingHistoryCreateDTO dto)
     {
@@ -79,7 +81,8 @@ public class ReadingHistoriesController : ControllerBase
             return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    
+    [Authorize]
     [HttpPut("update-{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] ReadingHistoryUpdateDTO dto)
     {
@@ -112,7 +115,8 @@ public class ReadingHistoriesController : ControllerBase
             return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    
+    [Authorize]
     [HttpDelete("delete-{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

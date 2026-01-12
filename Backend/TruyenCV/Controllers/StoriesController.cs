@@ -243,7 +243,7 @@ public class StoriesController : ControllerBase
         }
     }
 
-
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPost("create")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create([FromForm] StoryCreateDTO dto)
@@ -265,7 +265,8 @@ public class StoriesController : ControllerBase
             return StatusCode(500, new { status = false, message = ex.Message, data = (object?)null });
         }
     }
-
+    
+    [Authorize(Roles = "Admin,Employee")]
     [HttpPut("update-{id:int}")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(int id, [FromForm] StoryUpdateDTO dto)

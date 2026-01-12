@@ -17,6 +17,10 @@ public class AuthorsController : ControllerBase
     public async Task<IActionResult> GetAll()
         => Ok(new { status = true, message = "Lấy danh sách tác giả thành công.", data = await _service.GetAllAsync() });
 
+    [HttpGet("approved")]
+    public async Task<IActionResult> GetApproved()
+        => Ok(new { status = true, message = "Lấy danh sách tác giả đã duyệt thành công.", data = await _service.GetApprovedAsync() });
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {

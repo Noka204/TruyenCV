@@ -4,35 +4,55 @@ import '../config/api_config.dart';
 import '../models/genre.dart';
 import '../models/api_response.dart';
 import 'http_client_helper.dart';
+import 'response_helper.dart';
 
 class GenreService {
   final http.Client _client = HttpClientHelper.createHttpClient();
+  String? _token;
+
+  void setToken(String? token) {
+    _token = token;
+  }
+
+  Map<String, String> _getHeaders() {
+    final headers = {'Content-Type': 'application/json'};
+    if (_token != null) {
+      headers['Authorization'] = 'Bearer $_token';
+    }
+    return headers;
+  }
 
   // Lấy tất cả thể loại
   Future<ApiResponse<List<GenreListItem>>> getAllGenres() async {
     try {
       final response = await _client.get(
         Uri.parse('${ApiConfig.genresEndpoint}/all'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _getHeaders(),
       );
 
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
-        if (data is List) {
-          return data
-              .map(
-                (item) => GenreListItem.fromJson(item as Map<String, dynamic>),
-              )
-              .toList();
-        }
-        return <GenreListItem>[];
-      });
-
-      return apiResponse;
+      return ResponseHelper.createApiResponse<List<GenreListItem>>(
+        response,
+        (data) {
+          if (data is List) {
+            return data
+                .map(
+                  (item) =>
+                      GenreListItem.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+          }
+          return <GenreListItem>[];
+        },
+      );
     } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage =
+            'Lỗi parse JSON: Server không trả về dữ liệu hợp lệ. Vui lòng kiểm tra kết nối hoặc đăng nhập lại.';
+      }
       return ApiResponse(
         status: false,
-        message: 'Lỗi kết nối: ${e.toString()}',
+        message: errorMessage,
         data: null,
       );
     }
@@ -43,18 +63,18 @@ class GenreService {
     try {
       final response = await _client.get(
         Uri.parse('${ApiConfig.genresEndpoint}/$id'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _getHeaders(),
       );
 
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
-        if (data != null) {
-          return Genre.fromJson(data as Map<String, dynamic>);
-        }
-        return null;
-      });
-
-      return apiResponse;
+      return ResponseHelper.createApiResponse<Genre?>(
+        response,
+        (data) {
+          if (data != null) {
+            return Genre.fromJson(data as Map<String, dynamic>);
+          }
+          return null;
+        },
+      );
     } catch (e) {
       return ApiResponse(
         status: false,
@@ -69,19 +89,19 @@ class GenreService {
     try {
       final response = await _client.post(
         Uri.parse('${ApiConfig.genresEndpoint}/create'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _getHeaders(),
         body: json.encode(dto.toJson()),
       );
 
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) {
-        if (data != null && data is Map) {
-          return data['genreId'] as int?;
-        }
-        return null;
-      });
-
-      return apiResponse;
+      return ResponseHelper.createApiResponse<int?>(
+        response,
+        (data) {
+          if (data != null && data is Map) {
+            return data['genreId'] as int?;
+          }
+          return null;
+        },
+      );
     } catch (e) {
       return ApiResponse(
         status: false,
@@ -96,14 +116,14 @@ class GenreService {
     try {
       final response = await _client.put(
         Uri.parse('${ApiConfig.genresEndpoint}/update-$id'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _getHeaders(),
         body: json.encode(dto.toJson()),
       );
 
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) => true);
-
-      return apiResponse;
+      return ResponseHelper.createApiResponse<bool>(
+        response,
+        (data) => true,
+      );
     } catch (e) {
       return ApiResponse(
         status: false,
@@ -118,13 +138,13 @@ class GenreService {
     try {
       final response = await _client.delete(
         Uri.parse('${ApiConfig.genresEndpoint}/delete-$id'),
-        headers: {'Content-Type': 'application/json'},
+        headers: _getHeaders(),
       );
 
-      final jsonData = json.decode(response.body) as Map<String, dynamic>;
-      final apiResponse = ApiResponse.fromJson(jsonData, (data) => true);
-
-      return apiResponse;
+      return ResponseHelper.createApiResponse<bool>(
+        response,
+        (data) => true,
+      );
     } catch (e) {
       return ApiResponse(
         status: false,

@@ -22,6 +22,18 @@ public class AuthorService : IAuthorService
         }).ToList();
     }
 
+    public async Task<List<AuthorListItemDTO>> GetApprovedAsync()
+    {
+        var authors = await _repo.GetApprovedAsync();
+        return authors.Select(a => new AuthorListItemDTO
+        {
+            AuthorId = a.AuthorId,
+            DisplayName = a.DisplayName,
+            AvatarUrl = a.AvatarUrl,
+            CreatedAt = a.CreatedAt
+        }).ToList();
+    }
+
     public async Task<AuthorDTO?> GetByIdAsync(int id)
     {
         var a = await _repo.GetByIdAsync(id);

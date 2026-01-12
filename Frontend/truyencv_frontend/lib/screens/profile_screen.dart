@@ -1,26 +1,56 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/author_service.dart';
+import '../models/author.dart';
 import 'login_screen.dart';
-import 'reading_history_screen.dart';
-import 'bookmark_screen.dart';
-import 'main_screen.dart';
-import 'profile_screen.dart';
+import 'my_stories_screen.dart';
+import 'story_form_screen.dart';
 
-class MenuScreen extends StatefulWidget {
-  const MenuScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<MenuScreen> createState() => _MenuScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
+  final AuthorService _authorService = AuthorService();
+  Author? _myAuthor;
+  bool _isLoadingAuthor = false;
 
   @override
   void initState() {
     super.initState();
-    // Đảm bảo AuthService đã được khởi tạo
-    _authService.initialize();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _authService.initialize();
+    if (_isLoggedIn) {
+      _loadAuthorStatus();
+    }
+  }
+
+  Future<void> _loadAuthorStatus() async {
+    setState(() {
+      _isLoadingAuthor = true;
+    });
+
+    final token = _authService.token;
+    if (token != null) {
+      _authorService.setToken(token);
+      final response = await _authorService.getMyAuthor();
+      if (response.status && response.data != null) {
+        setState(() {
+          _myAuthor = response.data;
+        });
+      }
+    }
+
+    setState(() {
+      _isLoadingAuthor = false;
+    });
   }
 
   bool get _isLoggedIn {
@@ -32,7 +62,6 @@ class _MenuScreenState extends State<MenuScreen> {
     if (!_isLoggedIn) {
       return 'Đăng nhập / Đăng ký';
     }
-    // Ưu tiên hiển thị fullName, nếu không có thì dùng userName
     return _authService.fullName?.isNotEmpty == true
         ? _authService.fullName!
         : (_authService.userName?.isNotEmpty == true
@@ -49,50 +78,13 @@ class _MenuScreenState extends State<MenuScreen> {
         : 'TYT - Truyện Online, Offline';
   }
 
-  Future<void> _logout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _authService.logout();
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreen(key: UniqueKey())),
-          (route) => false,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đăng xuất thành công'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F0),
       appBar: AppBar(
         title: const Text(
-          'Menu',
+          'Tài khoản',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black87,
@@ -110,98 +102,39 @@ class _MenuScreenState extends State<MenuScreen> {
             _buildProfileHeader(),
             const SizedBox(height: 20),
 
-            // Lịch sử trên tài khoản
-            _buildSectionTitle('LỊCH SỬ TRÊN TÀI KHOẢN'),
-            _buildMenuItem(
-              icon: Icons.history,
-              iconColor: Colors.blue,
-              title: 'Truyện đã xem',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ReadingHistoryScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.favorite_outline,
-              iconColor: Colors.red,
-              title: 'Truyện đã thích',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BookmarkScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.download_outlined,
-              iconColor: Colors.green,
-              title: 'Truyện đã tải',
-              onTap: () {
-                _showComingSoonSnackBar();
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.bookmark_add_outlined,
-              iconColor: Colors.orange,
-              title: 'Truyện đã theo dõi',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BookmarkScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildMenuItem(
-              icon: Icons.people_outline,
-              iconColor: Colors.purple,
-              title: 'Người đang theo dõi',
-              onTap: () {
-                _showComingSoonSnackBar();
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Thông báo
-            _buildSectionTitle('THÔNG BÁO'),
-            _buildMenuItem(
-              icon: Icons.notifications_outlined,
-              iconColor: Colors.amber,
-              title: 'Thông báo của tôi',
-              onTap: () {
-                _showComingSoonSnackBar();
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Danh sách truyện
-            _buildSectionTitle('DANH SÁCH TRUYỆN'),
-            _buildMenuItem(
-              icon: Icons.library_books_outlined,
-              iconColor: Colors.teal,
-              title: 'Bộ sưu tập của tôi',
-              onTap: () {
-                _showComingSoonSnackBar();
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Đăng xuất (nếu đã đăng nhập)
+            // Truyện của tôi
             if (_isLoggedIn) ...[
-              _buildSectionTitle('TÀI KHOẢN'),
+              _buildSectionTitle('TRUYỆN CỦA TÔI'),
               _buildMenuItem(
-                icon: Icons.logout,
-                iconColor: Colors.red,
-                title: 'Đăng xuất',
-                onTap: _logout,
+                icon: Icons.menu,
+                iconColor: Colors.blue,
+                title: 'Danh sách',
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyStoriesScreen(),
+                    ),
+                  );
+                  // Reload author status khi quay lại để cập nhật trạng thái
+                  _loadAuthorStatus();
+                },
               ),
+              // Chỉ hiển thị "Đăng truyện" nếu author đã được duyệt
+              if (_myAuthor != null && _myAuthor!.status == 'Approved')
+                _buildMenuItem(
+                  icon: Icons.cloud_upload_outlined,
+                  iconColor: Colors.blue,
+                  title: 'Đăng truyện',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StoryFormScreen(),
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 20),
             ],
           ],
@@ -218,16 +151,7 @@ class _MenuScreenState extends State<MenuScreen> {
             context,
             MaterialPageRoute(builder: (context) => const LoginScreen()),
           ).then((_) async {
-            // Khởi tạo lại AuthService để tải thông tin người dùng mới
             await _authService.initialize();
-            setState(() {});
-          });
-        } else {
-          // Nếu đã đăng nhập, chuyển đến màn hình profile
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ProfileScreen()),
-          ).then((_) {
             setState(() {});
           });
         }
@@ -353,14 +277,5 @@ class _MenuScreenState extends State<MenuScreen> {
       ),
     );
   }
-
-  void _showComingSoonSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng đang phát triển'),
-        backgroundColor: Colors.orange,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
 }
+

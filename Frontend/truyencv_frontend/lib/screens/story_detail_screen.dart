@@ -46,6 +46,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   int _commentPage = 1;
   final int _commentPageSize = 10;
   int _totalComments = 0;
+  bool _isDescriptionExpanded = false; // Trạng thái mở rộng mô tả
 
   @override
   void initState() {
@@ -711,7 +712,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                           ),
                           if (_story!.description != null &&
                               _story!.description!.isNotEmpty)
-                            _buildDetailRow('Mô tả', _story!.description!),
+                            _buildDescriptionRow(_story!.description!),
                           _buildDetailRow(
                             'Ngày tạo',
                             _formatDate(_story!.createdAt),
@@ -751,6 +752,77 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
           ),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 16, color: valueColor)),
+          const Divider(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionRow(String description) {
+    // Kiểm tra xem mô tả có dài không (ước tính khoảng 150 ký tự = 3-4 dòng)
+    final isLongDescription = description.length > 150;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Mô tả',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Hiển thị mô tả với khả năng mở rộng/thu gọn
+          isLongDescription
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isDescriptionExpanded
+                          ? description
+                          : '${description.substring(0, 150)}...',
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.justify,
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isDescriptionExpanded = !_isDescriptionExpanded;
+                        });
+                      },
+                      child: Row(
+                        children: [
+                          Text(
+                            _isDescriptionExpanded ? 'Thu gọn' : 'Xem thêm',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.purple,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            _isDescriptionExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: Colors.purple,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  description,
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.justify,
+                ),
           const Divider(),
         ],
       ),

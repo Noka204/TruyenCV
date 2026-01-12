@@ -13,6 +13,12 @@ public class AuthorRepository : IAuthorRepository
     public Task<List<Author>> GetAllAsync()
         => _db.Authors.AsNoTracking().OrderByDescending(a => a.CreatedAt).ToListAsync();
 
+    public Task<List<Author>> GetApprovedAsync()
+        => _db.Authors.AsNoTracking()
+            .Where(a => a.Status == "Approved")
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+
     public Task<Author?> GetByIdAsync(int id)
         => _db.Authors.AsNoTracking().FirstOrDefaultAsync(a => a.AuthorId == id);
 

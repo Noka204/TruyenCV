@@ -4,6 +4,7 @@ using TruyenCV.Dtos.Stories;
 public interface IAuthorService
 {
     Task<List<AuthorListItemDTO>> GetAllAsync();
+    Task<List<AuthorListItemDTO>> GetApprovedAsync();
     Task<AuthorDTO?> GetByIdAsync(int id);
 
     Task<int> CreateAsync(AuthorCreateDTO dto);          // trả newId

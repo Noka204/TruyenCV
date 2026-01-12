@@ -5,6 +5,7 @@ namespace TruyenCV.Data.Repositories.Interface;
 public interface IAuthorRepository
 {
     Task<List<Author>> GetAllAsync();
+    Task<List<Author>> GetApprovedAsync();
     Task<Author?> GetByIdAsync(int id);
     Task<bool> ExistsAsync(int id);
 

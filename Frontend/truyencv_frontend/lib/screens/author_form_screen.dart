@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/author.dart';
 import '../services/author_service.dart';
+import '../services/auth_service.dart';
 
 class AuthorFormScreen extends StatefulWidget {
   final int? authorId;
@@ -24,8 +25,17 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeService();
     if (widget.authorId != null) {
       _loadAuthorData();
+    }
+  }
+
+  void _initializeService() {
+    // Set token cho AuthorService từ AuthService
+    final authService = AuthService();
+    if (authService.token != null) {
+      _authorService.setToken(authService.token);
     }
   }
 
@@ -57,6 +67,12 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
       return;
     }
 
+    // Đảm bảo token được set trước khi gọi API
+    final authService = AuthService();
+    if (authService.token != null) {
+      _authorService.setToken(authService.token);
+    }
+
     setState(() => _isLoading = true);
 
     if (widget.authorId == null) {
@@ -77,19 +93,40 @@ class _AuthorFormScreenState extends State<AuthorFormScreen> {
                 : _applicationUserIdController.text.trim(),
       );
 
-      final response = await _authorService.createAuthor(dto);
+      // Thử tạo tác giả với endpoint /create (cho Admin/Employee)
+      var response = await _authorService.createAuthor(dto);
+
+      // Nếu lỗi 403 (không có quyền), thử dùng endpoint /request (cho user thông thường)
+      if (!response.status &&
+          (response.message.contains('không có quyền') ||
+           response.message.contains('Bạn không có quyền'))) {
+        // Thử gửi yêu cầu đăng ký làm tác giả
+        response = await _authorService.submitAuthorRequest(dto);
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);
         if (response.status) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tạo tác giả thành công')),
+            const SnackBar(content: Text('Gửi yêu cầu đăng ký làm tác giả thành công')),
           );
           Navigator.pop(context, true);
         } else {
+          // Hiển thị thông báo lỗi với hướng dẫn rõ ràng hơn
+          String errorMessage = response.message;
+          
+          if (response.message.contains('đã gửi yêu cầu')) {
+            errorMessage = 'Bạn đã gửi yêu cầu đăng ký làm tác giả rồi. Vui lòng chờ phê duyệt.';
+          }
+          
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(response.message)));
+          ).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              duration: const Duration(seconds: 5),
+            ),
+          );
         }
       }
     } else {

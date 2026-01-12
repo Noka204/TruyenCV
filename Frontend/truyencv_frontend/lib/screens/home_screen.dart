@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/story_service.dart';
 import '../services/auth_service.dart';
+import '../widgets/story_banner.dart';
 import 'story_detail_screen.dart';
 import 'admin_screen.dart';
 import 'login_screen.dart';
@@ -221,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          // Danh sách truyện
+          // Danh sách truyện với banner
           Expanded(
             child:
                 _isLoading
@@ -281,13 +282,32 @@ class _HomeScreenState extends State<HomeScreen> {
                           () => _loadStories(
                             query: _searchQuery.isEmpty ? null : _searchQuery,
                           ),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _stories.length,
-                        itemBuilder: (context, index) {
-                          final story = _stories[index];
-                          return _buildStoryCard(story);
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          // Cho phép scroll dọc đi qua, không chặn
+                          return false;
                         },
+                        child: CustomScrollView(
+                          slivers: [
+                            // Banner tự lướt
+                            const SliverToBoxAdapter(
+                              child: StoryBanner(),
+                            ),
+                            // Danh sách truyện
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final story = _stories[index];
+                                    return _buildStoryCard(story);
+                                  },
+                                  childCount: _stories.length,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chapter.dart';
 import '../services/chapter_service.dart';
 import '../services/auth_service.dart';
+import '../models/api_response.dart';
 
 class ChapterFormScreen extends StatefulWidget {
   final int storyId;
@@ -132,8 +133,12 @@ class _ChapterFormScreenState extends State<ChapterFormScreen> {
         content: _contentController.text.trim(),
       );
 
-      // Gọi endpoint create-as-author cho tác giả
-      var response = await _chapterService.createChapterAsAuthor(dto);
+      ApiResponse<int?> response;
+      if (authService.isAdmin) {
+         response = await _chapterService.createChapter(dto);
+      } else {
+         response = await _chapterService.createChapterAsAuthor(dto);
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -155,8 +160,12 @@ class _ChapterFormScreenState extends State<ChapterFormScreen> {
         content: _contentController.text.trim(),
       );
 
-      // Gọi endpoint update-as-author cho tác giả
-      final response = await _chapterService.updateChapterAsAuthor(widget.chapterId!, dto);
+      ApiResponse<bool> response;
+      if (authService.isAdmin) {
+        response = await _chapterService.updateChapter(widget.chapterId!, dto);
+      } else {
+        response = await _chapterService.updateChapterAsAuthor(widget.chapterId!, dto);
+      }
 
       if (mounted) {
         setState(() => _isLoading = false);

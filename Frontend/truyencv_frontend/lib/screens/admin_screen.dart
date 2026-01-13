@@ -33,10 +33,29 @@ class _AdminScreenState extends State<AdminScreen>
   @override
   void initState() {
     super.initState();
+    _checkAccess();
     _tabController = TabController(length: 4, vsync: this);
     _initializeServices();
     _loadStories();
     _loadAuthors();
+  }
+
+  void _checkAccess() {
+    final authService = AuthService();
+    if (!authService.isAdmin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Kiểm tra lại mounted trước khi pop
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bạn không có quyền truy cập trang này'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
   }
 
   void _initializeServices() {

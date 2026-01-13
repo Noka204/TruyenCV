@@ -71,9 +71,10 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
       _authorService.setToken(authService.token);
     }
 
-    // Nếu là admin, load tất cả tác giả đã được duyệt
+    // Nếu là admin, load tất cả tác giả (bao gồm cả Pending)
     if (authService.isAdmin) {
-      final response = await _authorService.getApprovedAuthors();
+      // Cho phép Admin chọn bất kỳ tác giả nào
+      final response = await _authorService.getAllAuthors();
       if (response.status && response.data != null) {
         setState(() {
           _authors = response.data!;
@@ -508,6 +509,7 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
                           labelText: 'URL Ảnh bìa',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.image),
+                          helperText: 'Hỗ trợ các định dạng: jpg, png, webp, gif...',
                         ),
                         validator: (value) {
                           if (value != null &&
@@ -516,6 +518,71 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
                             return 'URL không được quá 500 ký tự';
                           }
                           return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      // Preview ảnh bìa
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _coverImageController,
+                        builder: (context, value, child) {
+                          final url = value.text.trim();
+                          if (url.isEmpty) return const SizedBox.shrink();
+
+                          return Column(
+                            children: [
+                              const SizedBox(height: 8),
+                              Container(
+                                width: 120, // Kích thước preview vừa phải
+                                height: 180,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey.shade100,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    url,
+                                    headers: const {
+                                      'User-Agent':
+                                          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                    },
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.broken_image,
+                                                color: Colors.red),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'Lỗi ảnh',
+                                              style: TextStyle(
+                                                  fontSize: 12, color: Colors.red),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    loadingBuilder:
+                                        (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Xem trước ảnh bìa',
+                                style:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          );
                         },
                       ),
                       const SizedBox(height: 16),

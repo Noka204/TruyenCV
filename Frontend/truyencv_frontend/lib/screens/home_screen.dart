@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: Colors.green,
             ),
           );
-        } else {
+        } else if (response.message.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(response.message),
@@ -162,17 +162,18 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               tooltip: 'Đăng nhập',
             ),
-          // Nút Admin
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminScreen()),
-              );
-            },
-            tooltip: 'Quản lý',
-          ),
+          // Nút Admin - Chỉ hiện nếu là Admin
+          if (_authService.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminScreen()),
+                );
+              },
+              tooltip: 'Quản lý',
+            ),
         ],
       ),
       body: Column(

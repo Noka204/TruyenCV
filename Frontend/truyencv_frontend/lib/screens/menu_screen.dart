@@ -5,6 +5,8 @@ import 'reading_history_screen.dart';
 import 'bookmark_screen.dart';
 import 'main_screen.dart';
 import 'profile_screen.dart';
+import 'followed_stories_screen.dart';
+import 'followed_authors_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -154,7 +156,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const BookmarkScreen(),
+                    builder: (context) => const FollowedStoriesScreen(),
                   ),
                 );
               },
@@ -164,7 +166,12 @@ class _MenuScreenState extends State<MenuScreen> {
               iconColor: Colors.purple,
               title: 'Người đang theo dõi',
               onTap: () {
-                _showComingSoonSnackBar();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FollowedAuthorsScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 20),

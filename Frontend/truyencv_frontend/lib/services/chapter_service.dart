@@ -113,7 +113,62 @@ class ChapterService {
     }
   }
 
+  // Tạo chapter mới (Author)
+  Future<ApiResponse<int?>> createChapterAsAuthor(ChapterCreateDTO dto) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('${ApiConfig.chaptersEndpoint}/create-as-author'),
+        headers: _getHeaders(),
+        body: json.encode(dto.toJson()),
+      );
+
+      return ResponseHelper.createApiResponse<int?>(
+        response,
+        (data) {
+          if (data != null && data is Map) {
+            return data['chapterId'] as int?;
+          }
+          return null;
+        },
+      );
+    } catch (e) {
+      String errorMessage = 'Lỗi kết nối: ${e.toString()}';
+      if (e.toString().contains('Unexpected end of JSON input')) {
+        errorMessage =
+            'Lỗi parse JSON: Server không trả về dữ liệu hợp lệ. Vui lòng kiểm tra kết nối hoặc đăng nhập lại.';
+      }
+      return ApiResponse(
+        status: false,
+        message: errorMessage,
+        data: null,
+      );
+    }
+  }
+
+  // Cập nhật chapter (Author)
+  Future<ApiResponse<bool>> updateChapterAsAuthor(int id, ChapterUpdateDTO dto) async {
+    try {
+      final response = await _client.put(
+        Uri.parse('${ApiConfig.chaptersEndpoint}/update-as-author-$id'),
+        headers: _getHeaders(),
+        body: json.encode(dto.toJson()),
+      );
+
+      return ResponseHelper.createApiResponse<bool>(
+        response,
+        (data) => true,
+      );
+    } catch (e) {
+      return ApiResponse(
+        status: false,
+        message: 'Lỗi kết nối: ${e.toString()}',
+        data: false,
+      );
+    }
+  }
+
   // Cập nhật chapter
+
   Future<ApiResponse<bool>> updateChapter(int id, ChapterUpdateDTO dto) async {
     try {
       final response = await _client.put(

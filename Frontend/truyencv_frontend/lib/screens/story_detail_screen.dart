@@ -6,12 +6,14 @@ import '../services/bookmark_service.dart';
 import '../services/auth_service.dart';
 import '../services/rating_service.dart';
 import '../services/comment_service.dart';
+import '../services/follow_story_service.dart';
 import '../models/bookmark.dart';
 import '../models/rating.dart';
 import '../models/comment.dart';
 import '../models/api_response.dart';
 import 'home_screen.dart';
 import 'chapters_list_screen.dart';
+import 'author_detail_screen.dart';
 
 class StoryDetailScreen extends StatefulWidget {
   final int storyId;
@@ -28,6 +30,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   final BookmarkService _bookmarkService = BookmarkService();
   final RatingService _ratingService = RatingService();
   final CommentService _commentService = CommentService();
+  final FollowStoryService _followStoryService = FollowStoryService();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
   Story? _story;
@@ -36,6 +39,8 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
   String? _errorMessage;
   bool _isBookmarked = false;
   bool _isBookmarking = false;
+  bool _isFollowing = false;
+  bool _isFollowActionInProgress = false;
   RatingSummary? _ratingSummary;
   Rating? _myRating;
   bool _isSubmittingRating = false;
@@ -57,6 +62,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       _bookmarkService.setToken(authService.token);
       _ratingService.setToken(authService.token);
       _commentService.setToken(authService.token);
+      _followStoryService.setToken(authService.token);
     }
     _loadStory();
   }
@@ -354,6 +360,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       });
       _loadAuthorName(story.authorId);
       _checkBookmarkStatus();
+      _checkFollowStatus();
       _loadRatingSummary();
       _loadMyRating();
       _loadComments();
@@ -371,6 +378,101 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       setState(() {
         _authorName = response.data!.displayName;
       });
+    }
+  }
+
+  Future<void> _checkFollowStatus() async {
+    if (_story == null) return;
+
+    final authService = AuthService();
+    if (authService.token == null) {
+      setState(() {
+        _isFollowing = false;
+      });
+      return;
+    }
+
+    final response = await _followStoryService.checkFollowing(widget.storyId);
+
+    if (mounted) {
+      setState(() {
+        _isFollowing = response.data ?? false;
+      });
+    }
+  }
+
+   Future<void> _toggleFollow() async {
+    final authService = AuthService();
+    if (authService.token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để theo dõi truyện'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isFollowActionInProgress = true;
+    });
+
+    try {
+      if (_isFollowing) {
+        final response = await _followStoryService.unfollowStory(widget.storyId);
+        if (response.status) {
+          setState(() {
+            _isFollowing = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đã bỏ theo dõi truyện'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        final response = await _followStoryService.followStory(widget.storyId);
+        if (response.status) {
+          setState(() {
+            _isFollowing = true;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đã theo dõi truyện'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFollowActionInProgress = false;
+        });
+      }
     }
   }
 
@@ -695,12 +797,89 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                                 tooltip:
                                     _isBookmarked ? 'Bỏ lưu' : 'Lưu truyện',
                               ),
+                              const SizedBox(width: 8),
+                              // Nút Follow
+                              IconButton(
+                                icon:
+                                    _isFollowActionInProgress
+                                        ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : Icon(
+                                          _isFollowing
+                                              ? Icons.notifications_active
+                                              : Icons.notifications_none,
+                                        ),
+                                onPressed:
+                                    _isFollowActionInProgress
+                                        ? null
+                                        : _toggleFollow,
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.orange.shade50,
+                                  padding: const EdgeInsets.all(16),
+                                ),
+                                tooltip:
+                                    _isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+                              ),
                             ],
                           ),
                           const SizedBox(height: 24),
-                          _buildDetailRow(
-                            'Tác giả',
-                            _authorName ?? 'ID: ${_story!.authorId}',
+                          // Tác giả (clickable)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Tác giả',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AuthorDetailScreen(
+                                          authorId: _story!.authorId,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            _authorName ?? 'ID: ${_story!.authorId}',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.blue,
+                                              decoration: TextDecoration.underline,
+                                            ),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: Colors.blue,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const Divider(),
+                              ],
+                            ),
                           ),
                           _buildDetailRow(
                             'Trạng thái',

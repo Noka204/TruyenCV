@@ -132,15 +132,8 @@ class _ChapterFormScreenState extends State<ChapterFormScreen> {
         content: _contentController.text.trim(),
       );
 
-      // Thử tạo chapter với endpoint /create (cho Admin/Employee)
-      var response = await _chapterService.createChapter(dto);
-
-      // Nếu lỗi 403 (không có quyền), có thể cần endpoint create-as-user nếu có
-      if (!response.status &&
-          (response.message.contains('không có quyền') ||
-           response.message.contains('Bạn không có quyền'))) {
-        // Hiện tại chưa có endpoint create-as-user cho chapter, chỉ hiển thị lỗi
-      }
+      // Gọi endpoint create-as-author cho tác giả
+      var response = await _chapterService.createChapterAsAuthor(dto);
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -162,7 +155,8 @@ class _ChapterFormScreenState extends State<ChapterFormScreen> {
         content: _contentController.text.trim(),
       );
 
-      final response = await _chapterService.updateChapter(widget.chapterId!, dto);
+      // Gọi endpoint update-as-author cho tác giả
+      final response = await _chapterService.updateChapterAsAuthor(widget.chapterId!, dto);
 
       if (mounted) {
         setState(() => _isLoading = false);

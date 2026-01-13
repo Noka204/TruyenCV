@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/author.dart';
 import '../services/author_service.dart';
+import '../services/follow_author_service.dart';
+import '../services/auth_service.dart';
 
 class AuthorDetailScreen extends StatefulWidget {
   final int authorId;
@@ -13,13 +15,20 @@ class AuthorDetailScreen extends StatefulWidget {
 
 class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
   final AuthorService _authorService = AuthorService();
+  final FollowAuthorService _followAuthorService = FollowAuthorService();
   Author? _author;
   bool _isLoading = true;
   String? _errorMessage;
+  bool _isFollowing = false;
+  bool _isFollowActionInProgress = false;
 
   @override
   void initState() {
     super.initState();
+    final authService = AuthService();
+    if (authService.token != null) {
+      _followAuthorService.setToken(authService.token);
+    }
     _loadAuthor();
   }
 
@@ -40,6 +49,105 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
         _errorMessage = response.message;
       }
     });
+    
+    if (response.status && response.data != null) {
+      _checkFollowStatus();
+    }
+  }
+
+  Future<void> _checkFollowStatus() async {
+    if (_author == null) return;
+
+    final authService = AuthService();
+    if (authService.token == null) {
+      setState(() {
+        _isFollowing = false;
+      });
+      return;
+    }
+
+    final response = await _followAuthorService.checkFollowing(widget.authorId);
+
+    if (mounted) {
+      setState(() {
+        _isFollowing = response.data ?? false;
+      });
+    }
+  }
+
+  Future<void> _toggleFollow() async {
+    final authService = AuthService();
+    if (authService.token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để theo dõi tác giả'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isFollowActionInProgress = true;
+    });
+
+    try {
+      if (_isFollowing) {
+        final response = await _followAuthorService.unfollowAuthor(widget.authorId);
+        if (response.status) {
+          setState(() {
+            _isFollowing = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đã bỏ theo dõi tác giả'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } else {
+        final response = await _followAuthorService.followAuthor(widget.authorId);
+        if (response.status) {
+          setState(() {
+            _isFollowing = true;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đã theo dõi tác giả'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFollowActionInProgress = false;
+        });
+      }
+    }
   }
 
   @override
@@ -88,6 +196,43 @@ class _AuthorDetailScreenState extends State<AuthorDetailScreen> {
                               child: _author!.avatarUrl == null
                                   ? const Icon(Icons.person, size: 60)
                                   : null,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Nút Follow
+                          Center(
+                            child: ElevatedButton.icon(
+                              onPressed: _isFollowActionInProgress ? null : _toggleFollow,
+                              icon: _isFollowActionInProgress
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _isFollowing
+                                          ? Icons.person_remove
+                                          : Icons.person_add,
+                                    ),
+                              label: Text(
+                                _isFollowing ? 'Bỏ theo dõi' : 'Theo dõi',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isFollowing
+                                    ? Colors.grey
+                                    : Colors.blue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),
